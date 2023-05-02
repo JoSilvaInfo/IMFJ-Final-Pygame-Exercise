@@ -58,7 +58,7 @@ class Projectile:
     ##################
 
 def main():
-    projectile = Projectile(0, HEIGHT/2, 80, 10) 
+    projectile = Projectile(0, HEIGHT/2, 80, 40) 
 
     # Initialize flag variables
     shoot = False

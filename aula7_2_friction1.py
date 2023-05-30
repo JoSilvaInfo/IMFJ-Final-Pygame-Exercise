@@ -44,14 +44,14 @@ while running:
                 force_applied -= force_increment
     
     t=0.05
-    normal_force = ball_mass * gravity * -1
+    normal_force = ball_mass * gravity 
 
-    coefficient_of_static_friction=0.05
+    coefficient_of_static_friction=0.2
     static_friction = coefficient_of_static_friction * normal_force
     net_force = force_applied - static_friction
     if(net_force>0):
        #kinetic friction
-       coefficient_of_kinetic_friction =0.2
+       coefficient_of_kinetic_friction =0.05
        kinetic_friction = coefficient_of_kinetic_friction * normal_force
        net_force = force_applied - kinetic_friction
        acceleration = net_force / ball_mass

@@ -1,6 +1,7 @@
 import pygame
 import math
 import random
+import time
 
 # Defining screen/window:
 ## Define the size/resolution of our window

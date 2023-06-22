@@ -1,25 +1,30 @@
 import pygame
+import time
+import random
+
+# Define the size/resolution of our window
+res_x, res_y = 1400, 1000
+# Create a window and a display surface
+screen = pygame.display.set_mode((res_x, res_y))
+# Give the created window a name
+pygame.display.set_caption("Pirate Escape")
 
 
 def main():
     # Initialize pygame, with the default parameters
     pygame.init()
 
-    # Define the size/resolution of our window
-    res_x = 640
-    res_y = 480
-
-    # Create a window and a display surface
-    screen = pygame.display.set_mode((res_x, res_y))
+    run = True
 
     # Game loop, runs forever
-    while (True):
-        # Process OS events
+    while run:
+        # Process events
         for event in pygame.event.get():
             # Checks if the user closed the window
             if (event.type == pygame.QUIT):
                 # Exits the application immediately
                 return
+            #checks user input
             elif (event.type == pygame.KEYDOWN):
                 if (event.key == pygame.K_ESCAPE):
                     return

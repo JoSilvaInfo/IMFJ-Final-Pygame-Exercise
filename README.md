@@ -37,3 +37,6 @@ relatório será avaliado com base na inclusão e qualidade dos pontos pedidos n
 e a forma como o relacionam com este projeto), na qualidade na escrita (os erros 
 ortográficos serão penalizados), na formatação Markdown, e na formatação correta das 
 referências em estilo APA.
+
+### YouTube:
+How to make a Menu in Pygame: https://www.youtube.com/watch?v=2iyx8_elcYg&ab_channel=CodingWithRuss 

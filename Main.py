@@ -16,11 +16,19 @@ pygame.display.set_caption("Pirate Escape")
 ## Load background image and re-size it 
 BGImg = pygame.transform.scale(pygame.image.load("img/BG1.png"), (res_x, res_y))
 
+#Surfices
+## Floatable 
+#Plank_Img = pygame.transform.scale(pygame.image.load("img/Wood.png"), (48, 64))
+## Sincable 
+#Twig_Img = pygame.transform.scale(pygame.image.load("img/Tree.png"), (48, 64))
+## Water 
+#Water_Img = pygame.transform.scale(pygame.image.load("img/Water.png"), (48, 64))
+
 #Player parameters:
 ## Define the size of the player
 pl_with, pl_height = 100, 120
 ## Define the speed and jump height of the player
-pl_speed, pl_jump = 3, 5
+pl_speed, pl_jump = 3, 100 
 ## Mass of the body in kg
 pl_mass = 10
 ## Load player image and re-size it 
@@ -53,9 +61,9 @@ def main():
     pygame.init()
 
     # Define initial position
-    pl_x, pl_y = 200, (res_y - pl_height) 
+    pl_x, pl_y, pl_j_speed = 200, (res_y - pl_height), pl_jump 
 
-    # Movement key hold
+    # Movement key hold confirmations
     move_l, move_r, jumping = False, False, False
     
     clock = pygame.time.Clock()
@@ -90,17 +98,10 @@ def main():
                 if (event.key == pygame.K_RIGHT):
                     move_r = True
                 if (event.key == pygame.K_UP):
-                    # Check if player is grounded
-                    if pl_y == res_y - pl_height:
-                        jumping = False
-                    # Check if player is already jumping
-                    if jumping == False:
-                        pl_y -= pl_jump
-                        jumping = True
+                    jumping = True
             else:
                     move_l = False
                     move_r = False
-                    jumping = False
 
         if(move_r):
             # Check if inside bounds
@@ -112,6 +113,12 @@ def main():
             if pl_x - pl_speed >= 50:
                 # Move player
                 pl_x -= pl_speed
+        if(jumping):
+            pl_y -= pl_j_speed 
+            pl_j_speed -= gravity
+            if pl_j_speed < -pl_jump:
+                jumping = False
+                pl_j_speed = pl_jump
 
         
         draw_text (f"Time: {round(elapsed_time)}s", font, TEXT_COL, (res_x / 2) - 110, 20)

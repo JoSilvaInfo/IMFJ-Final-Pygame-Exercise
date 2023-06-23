@@ -2,6 +2,9 @@ import pygame
 import math
 import random
 import time
+pygame.font.init()
+
+StartGame = True
 
 # Defining screen/window:
 ## Define the size/resolution of our window
@@ -33,6 +36,17 @@ buoyant_force = 5
 # Gravitational force
 gravity = 9.8
 
+# Game UI
+## Defining fonts 
+font = pygame.font.SysFont("arialblack", 50)
+## Define colors
+TEXT_COL = (0, 0, 0)
+
+def draw_text(text, font, text_col, x, y):
+    img = font.render(text, True, text_col)
+    screen.blit(img, (x, y))
+
+
 # Main game loop
 def main():
     # Initialize pygame, with the default parameters
@@ -43,11 +57,24 @@ def main():
 
     # Movement key hold
     move_l, move_r, jumping = False, False, False
+    
+    clock = pygame.time.Clock()
+    # Keeping track of time
+    ## Gives the current time
+    start_time = time.time()
+    ## 
+    elapsed_time = 0
 
     # Game loop, runs forever
-    while (True):
+    while StartGame:
+        # Delay while loop for 60 fps
+        clock.tick(90)
+        # Get the seconds since start of the while loop
+        elapsed_time = time.time() - start_time
+        
         # Clears the screen with the same backgroung image
         screen.blit(BGImg, (0, 0))
+        
         # Process events
         for event in pygame.event.get():
             # Checks if the user closed the window
@@ -63,26 +90,34 @@ def main():
                 if (event.key == pygame.K_RIGHT):
                     move_r = True
                 if (event.key == pygame.K_UP):
-                    jumping = True
+                    # Check if player is grounded
+                    if pl_y == res_y - pl_height:
+                        jumping = False
+                    # Check if player is already jumping
+                    if jumping == False:
+                        pl_y -= pl_jump
+                        jumping = True
             else:
                     move_l = False
                     move_r = False
                     jumping = False
 
         if(move_r):
-            pl_x += pl_speed
+            # Check if inside bounds
+            if pl_x + pl_speed + pl_with <= res_x:
+                # Move player
+                pl_x += pl_speed
         if(move_l):
-            pl_x -= pl_speed
-        if(jumping):
-            pl_y -= pl_jump
+            # Check if inside bounds
+            if pl_x - pl_speed >= 50:
+                # Move player
+                pl_x -= pl_speed
 
+        
+        draw_text (f"Time: {round(elapsed_time)}s", font, TEXT_COL, (res_x / 2) - 110, 20)
         # Draw player in a determined location
         screen.blit(PLImg, (pl_x, pl_y))
         # Update screen
         pygame.display.update()
-
-      
-        # Swaps the back and front buffer, effectively displaying what we rendered
-        #pygame.display.flip()
         
 main()

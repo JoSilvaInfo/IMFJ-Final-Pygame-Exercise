@@ -1,5 +1,6 @@
 import pygame
 import buttons
+import time
 
 pygame.init()
 
@@ -18,7 +19,7 @@ game_paused = True
 menu_state = "main"
 
 # Defining fonts 
-font = pygame.font.SysFont("arialblack", 40)
+font = pygame.font.SysFont("arialblack", 50)
 
 # Define colors
 TEXT_COL = (0, 0, 0)
@@ -37,7 +38,7 @@ options_button = buttons.Button(res_x / 2.5, res_y / 2, options_img, 0.5)
 quit_button = buttons.Button(res_x / 2.5, (res_y / 2) + 150, quit_img, 0.5)
 ctrl_button = buttons.Button(res_x / 2.5, (res_y / 2) - 150, ctrl_img, 0.5)
 audio_button = buttons.Button(res_x / 2.5, (res_y / 2), audio_img, 0.5)
-back_button = buttons.Button(res_x / 2.5, (res_y / 2) + 150, back_img, 0.5)
+back_button = buttons.Button(res_x / 2.5, (res_y / 2) + 250, back_img, 0.5)
 
 def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
@@ -55,8 +56,9 @@ while run:
         # Check menu state
         if menu_state == "main":
             # Draw pause screen buttons only
-            draw_text ("PAUSED", font, TEXT_COL, (res_x / 2) - 75, 200)
+            draw_text ("PAUSED", font, TEXT_COL, (res_x / 2) - 100, 200)
             if resume_button.draw(screen):
+                #Main.StartGame = True
                 game_paused = False
             if options_button.draw(screen):
                 menu_state = "options"
@@ -66,11 +68,11 @@ while run:
         # Check if the options menu is open 
         if menu_state == "options":
             # Draw options screen buttons only
-            draw_text ("OPTIONS", font, TEXT_COL, (res_x / 2) - 75, 200)
+            draw_text ("OPTIONS", font, TEXT_COL, (res_x / 2) - 110, 200)
             if ctrl_button.draw(screen):
                 menu_state = "controls"
-            if options_button.draw(screen):
-                menu_state = "options"
+            if audio_button.draw(screen):
+                pass
             if back_button.draw(screen):
                 menu_state = "main"
                 
@@ -78,10 +80,11 @@ while run:
         if menu_state == "controls":
             # Draw controls screen buttons only
             ## Show the "How to play" controls
-            draw_text ("CONTROLS", font, TEXT_COL, (res_x / 2) - 75, 200)
-            draw_text ("Use the RIGHT and LEFT arrow keys to move.", font, TEXT_COL, 300, 300)
-            draw_text ("Use the UP arrow keys to move.", font, TEXT_COL, 300, 400)
-            draw_text ("Survive for as long as you can!", font, TEXT_COL, 300, 500)
+            draw_text ("CONTROLS", font, TEXT_COL, (res_x / 2) - 110, 200)
+            draw_text ("Use the RIGHT and LEFT arrow keys", font, TEXT_COL, 200, 300)
+            draw_text ("to move between platforms.", font, TEXT_COL, 200, 400)
+            draw_text ("Use the UP arrow keys to move.", font, TEXT_COL, 200, 500)
+            draw_text ("Survive for as long as you can!", font, TEXT_COL, 200, 600)
             if back_button.draw(screen):
                 menu_state = "options"
 

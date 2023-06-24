@@ -4,7 +4,7 @@ import random
 import time
 from freefall import CannonBall
 from platforms import Platform
-#import Menu
+#from menu import MainMenu, GameOver, Pause
 
 pygame.font.init()
 
@@ -41,15 +41,6 @@ buoyant_force = 5
 # Gravitational force
 gravity = 9.8
 
-#Objects
-## Floatable 
-#Plank_Img = pygame.transform.scale(pygame.image.load("img/Wood.png"), (48, 64))
-
-## Sincable 
-#Twig_Img = pygame.transform.scale(pygame.image.load("img/Tree.png"), (48, 64))
-## Water 
-#Water_Img = pygame.transform.scale(pygame.image.load("img/Water.png"), (48, 64))
-
 ## Cannon ball
 ball_radius = 10
 ball_mass = 30
@@ -71,7 +62,7 @@ def draw_text(text, font, text_col, x, y):
 # List to store CannonBall instances
 cannonballs = []  
 # Max cannonballs on screen
-max_cannonballs = random.randint(3, 5)
+max_cannonballs = random.randint(2, 4)
 
 def random_ball():
     global ball_radius, ball_mass
@@ -127,7 +118,7 @@ def main():
     # Game loop, runs forever
     while StartGame:
         # Delay while loop for 90 fps
-        #clock.tick(90)
+        clock.tick(90)
         # Get the seconds since start of the while loop
         elapsed_time = time.time() - start_time
         

@@ -2,7 +2,8 @@ import pygame
 import buttons
 import time
 
-pygame.init()
+#Put all this onto a class
+
 
 # Defining screen/window:
 ## Define the size/resolution of our window

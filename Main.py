@@ -2,6 +2,9 @@ import pygame
 import math
 import random
 import time
+import freefall
+#import Menu
+
 pygame.font.init()
 
 StartGame = True
@@ -16,7 +19,7 @@ pygame.display.set_caption("Pirate Escape")
 ## Load background image and re-size it 
 BGImg = pygame.transform.scale(pygame.image.load("img/BG1.png"), (res_x, res_y))
 
-#Surfices
+#Surfaces
 ## Floatable 
 #Plank_Img = pygame.transform.scale(pygame.image.load("img/Wood.png"), (48, 64))
 ## Sincable 
@@ -25,6 +28,8 @@ BGImg = pygame.transform.scale(pygame.image.load("img/BG1.png"), (res_x, res_y))
 #Water_Img = pygame.transform.scale(pygame.image.load("img/Water.png"), (48, 64))
 
 #Player parameters:
+## Player lives
+pl_lives = 3
 ## Define the size of the player
 pl_with, pl_height = 100, 120
 ## Define the speed and jump height of the player
@@ -35,9 +40,10 @@ pl_mass = 10
 PLImg = pygame.transform.scale(pygame.image.load("img/Player.png"), (pl_with, pl_height))
 
 
+
 # Buoyancy parameters:
 ## Initial position of the water level
-water_level = res_y * 2 // 3  
+water_level = 850 
 ## Density of water (higher value for denser water)
 water_density = 4.5 
 buoyant_force = 5 
@@ -61,10 +67,13 @@ def main():
     pygame.init()
 
     # Define initial position
-    pl_x, pl_y, pl_j_speed = 200, (res_y - pl_height), pl_jump 
+    pl_x, pl_y, pl_j_speed = 200, (water_level - pl_height), pl_jump 
 
     # Movement key hold confirmations
     move_l, move_r, jumping = False, False, False
+
+    # Event confirmation
+    shoot = False
     
     clock = pygame.time.Clock()
     # Keeping track of time
@@ -103,6 +112,10 @@ def main():
                     move_l = False
                     move_r = False
 
+        # Check ifplayer is still alive 
+        #if pl_lives <=0:
+            #Menu.gameover()
+
         if(move_r):
             # Check if inside bounds
             if pl_x + pl_speed + pl_with <= res_x:
@@ -120,10 +133,23 @@ def main():
                 jumping = False
                 pl_j_speed = pl_jump
 
+        if shoot:
+            if freefall.CannonBall.y + freefall.CannonBall.height < water_level:  # Rectangle is in the free-fall phase
+                # Calculate the net force
+                net_force = freefall.CannonBall.mass * gravity
+            
+
+                # Apply the net force to the rectangle's position
+                acceleration = net_force / freefall.CannonBall.mass
+                rectangle_y += acceleration
+
         
         draw_text (f"Time: {round(elapsed_time)}s", font, TEXT_COL, (res_x / 2) - 110, 20)
+        draw_text (f"Lives: {pl_lives}", font, TEXT_COL, 50, 20)
         # Draw player in a determined location
         screen.blit(PLImg, (pl_x, pl_y))
+        # Draw ground
+        pygame.draw.line(screen, (0, 0, 0), (0, water_level), (res_x, water_level), 2)
         # Update screen
         pygame.display.update()
         

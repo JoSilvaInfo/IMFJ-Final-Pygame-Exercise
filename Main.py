@@ -3,6 +3,7 @@ import math
 import random
 import time
 from freefall import CannonBall
+from platforms import Platform
 #import Menu
 
 pygame.font.init()
@@ -44,12 +45,6 @@ gravity = 9.8
 ## Floatable 
 #Plank_Img = pygame.transform.scale(pygame.image.load("img/Wood.png"), (48, 64))
 
-# Platform object
-platform = pygame.Rect(200, water_level, 50, 30)
-float_direction = -1
-float_speed = 0.5
-float_range = 40
-
 ## Sincable 
 #Twig_Img = pygame.transform.scale(pygame.image.load("img/Tree.png"), (48, 64))
 ## Water 
@@ -86,6 +81,9 @@ def main():
 
     # Event confirmation
     shoot = False
+
+    # List to store CannonBall instances
+    cannonballs = []  
     
     clock = pygame.time.Clock()
     # Keeping track of time
@@ -95,26 +93,29 @@ def main():
     elapsed_time = 0
 
     # Initial spawn after 30 seconds
-    next_spawn_time = time.time() + 30  
+    next_spawn_time = 5
 
     def spawn_cballs():
-        sp_x = 0
-        sp_y = random.randint(ball_radius, res_y - ball_radius)
-        ball = CannonBall(CannonBall.x, CannonBall.y, ball_radius)
-        CannonBall.append(ball)
+        num_balls = random.randint(3, 4)  # Generate a random number of CannonBalls to spawn
+        for _ in range(num_balls):
+            sp_x = 0
+            sp_y = random.randint(ball_radius, res_y - ball_radius)
+            color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))  # Random color for each CannonBall
+            ball = CannonBall(sp_x, sp_y, ball_radius, 0, 0, 0, color)
+            cannonballs.append(ball)
 
     # Game loop, runs forever
     while StartGame:
-        # Delay while loop for 60 fps
+        # Delay while loop for 90 fps
         clock.tick(90)
         # Get the seconds since start of the while loop
         elapsed_time = time.time() - start_time
-        
         
         # Player object
         player = pygame.Rect(pl_x, pl_y, pl_with, pl_height)
         # Clears the screen with the same backgroung image
         screen.blit(BGImg, (0, 0))
+
         
         # Process events
         for event in pygame.event.get():
@@ -166,31 +167,42 @@ def main():
             pl_y = 0
         elif pl_y > water_level - pl_height:
             pl_y = water_level - pl_height
-            
-        # Check collision with the platform
-        if player.colliderect(platform) and pl_jump > 0:
-            pl_y = platform.y - pl_height
-            pl_jump = 0
 
-        # Platform floating and bouncing
-        if floating:
-            platform.y += float_speed * float_direction
-            if abs(platform.y - platform.y) >= float_range:
-                float_direction *= -1
         
         # Check if it's time to cannon balls a ball
         current_time = time.time()
-        if current_time >= next_spawn_time:
-            spawn_cballs()
+        if elapsed_time >= next_spawn_time:
+            shoot = True
             # Schedule next spawn after 30 seconds
-            next_spawn_time = current_time + 30
-        
+            next_spawn_time = next_spawn_time + 5
+
+        if shoot:
+            print("Shoot!")
+            # Calculate time step based on frame rate to update the Canonballs
+            ## Convert milliseconds to seconds
+            time_step = clock.get_time() / 1000.0  
+            shoot = False
+
+            # Update CannonBalls
+            for ball in cannonballs:
+                ball.update(time_step)
+
+            # Handle CannonBall collisions
+            for ball in cannonballs:
+                ball.handle_cball_collision(player)
+
+            # Remove CannonBalls that are offscreen
+            cannonballs = [ball for ball in cannonballs if not ball.is_offscreen()]
+            # Draw CannonBalls
+            for ball in cannonballs:
+                ball.draw(screen)
+
         draw_text (f"Time: {round(elapsed_time)}s", font, TEXT_COL, (res_x / 2) - 110, 20)
         draw_text (f"Lives: {pl_lives}", font, TEXT_COL, 50, 20)
 
+        #platform.update()
         # Draw player in a determined location
         screen.blit(PLImg, player)
-        pygame.draw.rect(screen, (255, 0, 0), platform)
         # Draw ground
         pygame.draw.line(screen, (0, 0, 0), (0, water_level), (res_x, water_level), 2)
         # Update screen

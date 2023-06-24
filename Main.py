@@ -73,11 +73,11 @@ cannonballs = []
 # Max cannonballs on screen
 max_cannonballs = random.randint(3, 5)
 
-def random_ball(existing_x_coordinates):
+def random_ball():
     global ball_radius, ball_mass
     # Generate random mass and radius
     ball_radius = random.randint(10, 50)
-    ball_mass = random.randint(10, 90)
+    ball_mass = random.randint(30, 100)
     return ball_radius, ball_mass
 
 
@@ -88,11 +88,11 @@ def spawn_cballs():
     for _ in range(num_balls):
         sp_x = random.randint(ball_radius, res_x - ball_radius)
         sp_y = 10
-        # Random color for each CannonBall
         color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
         ball_radius, ball_mass = random_ball()
         ball_speed = ball_radius * ball_mass
-        ball = CannonBall(sp_x, sp_y, ball_radius, ball_mass, 0, ball_speed, color, water_level, gravity, pl_height)
+        # Include the 'lives' argument when creating a CannonBall instance
+        ball = CannonBall(sp_x, sp_y, ball_radius, ball_mass, 0, ball_speed, color, water_level, gravity, pl_height, pl_lives)
         cannonballs.append(ball)
 
 
@@ -119,6 +119,10 @@ def main():
 
     # Initial spawn after 30 seconds
     next_spawn_time = 1
+    
+    # Create a Platform object
+    platform = Platform(random.randint(50, res_x - 50), water_level, 40, 20, 50, 1, water_level, water_density, gravity)
+
 
     # Game loop, runs forever
     while StartGame:
@@ -133,6 +137,9 @@ def main():
         screen.blit(BGImg, (0, 0))
         # Draw ground
         pygame.draw.line(screen, (0, 0, 0), (0, water_level), (res_x, water_level), 2)
+        # Update and draw the platform
+        platform.update()
+        platform.draw(screen)
         
         # Process events
         for event in pygame.event.get():
@@ -185,6 +192,11 @@ def main():
         elif pl_y > water_level - pl_height:
             pl_y = water_level - pl_height
 
+        # Check for collision between player and platform
+        if player.colliderect(platform.get_rect()):
+            # Apply buoyancy to the platform when the player is on top
+            platform.apply_buoyancy()
+
         
         if elapsed_time >= next_spawn_time:
             # Spawn CannonBalls if the maximum number is not reached
@@ -202,12 +214,12 @@ def main():
             # Delay between cannonball updates
             pygame.time.delay(cannonball_delay)
 
-            # Handle CannonBall collisions
-            for ball in cannonballs:
+            # Remove CannonBalls that are offscreen or collided with the player
+            if ball.is_offscreen() or ball.collided_with_player:
+                cannonballs.remove(ball)
+            else:
+                # Handle CannonBall collisions
                 ball.handle_cball_collision(player)
-
-            # Remove CannonBalls that are offscreen
-            cannonballs = [ball for ball in cannonballs if not ball.is_offscreen()]
 
             # Draw CannonBalls
             for ball in cannonballs:
@@ -216,7 +228,7 @@ def main():
         draw_text (f"Time: {round(elapsed_time)}s", font, TEXT_COL, (res_x / 2) - 110, 20)
         draw_text (f"Lives: {pl_lives}", font, TEXT_COL, 50, 20)
 
-        #platform.update()
+        platform.update()
         # Draw player in a determined location
         screen.blit(PLImg, player)
         # Update screen

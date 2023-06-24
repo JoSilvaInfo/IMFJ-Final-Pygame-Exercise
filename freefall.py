@@ -3,7 +3,7 @@ from pygame.math import Vector2
 import math
 
 class CannonBall:
-    def __init__(self, x, y, radius, mass, angle_degrees, speed, color, water_level, gravity, height):
+    def __init__(self, x, y, radius, mass, angle_degrees, speed, color, water_level, gravity, height, lives):
         self.x = x
         self.y = y
         self.radius = radius
@@ -16,6 +16,8 @@ class CannonBall:
         self.water_level = water_level
         self.gravity = gravity
         self.height = height
+        self.lives = lives
+        self.collided_with_player = False
 
     def update(self, time_step):
         self.y += self.velocity.y * time_step
@@ -39,10 +41,10 @@ class CannonBall:
     def handle_cball_collision(self, player):
         distance = math.sqrt((player.x - self.x) ** 2 + (player.y - self.y) ** 2)
         if distance <= self.radius + player.height:
-            self.pl_lives -= 1
+            self.lives -= 1
+            self.collided_with_player = True
 
     def is_offscreen(self):
-        print("Delete")
         return self.y > self.water_level
     
     def draw(self, screen):

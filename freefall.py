@@ -18,6 +18,7 @@ class CannonBall:
         self.height = height
         self.lives = lives
         self.collided_with_player = False
+        self.offscreen = False
 
     def update(self, time_step):
         self.y += self.velocity.y * time_step
@@ -31,8 +32,7 @@ class CannonBall:
         if self.y + self.height < self.water_level:  # Rectangle is in the free-fall phase
                 # Calculate the net force
                 net_force = self.mass * self.gravity
-            
-
+                
                 # Apply the net force to the rectangle's position
                 acceleration = net_force / self.mass
                 self.y += acceleration
@@ -45,7 +45,9 @@ class CannonBall:
             self.collided_with_player = True
 
     def is_offscreen(self):
-        return self.y > self.water_level
+        if self.y > self.water_level:
+            print("Destroy")
+            self.offscreen = True
     
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius)

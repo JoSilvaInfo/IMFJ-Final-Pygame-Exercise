@@ -127,7 +127,7 @@ def main():
     # Game loop, runs forever
     while StartGame:
         # Delay while loop for 90 fps
-        clock.tick(90)
+        #clock.tick(90)
         # Get the seconds since start of the while loop
         elapsed_time = time.time() - start_time
         
@@ -215,7 +215,7 @@ def main():
             pygame.time.delay(cannonball_delay)
 
             # Remove CannonBalls that are offscreen or collided with the player
-            if ball.is_offscreen() or ball.collided_with_player:
+            if ball.offscreen  or ball.collided_with_player:
                 cannonballs.remove(ball)
             else:
                 # Handle CannonBall collisions

@@ -8,8 +8,8 @@ class CannonBall:
         self.y = y
         self.radius = radius
         self.mass = mass
-        self.angle_rad = math.radians(angle_degrees)
-        self.velocity = Vector2(speed * math.cos(self.angle_rad), speed * math.sin(self.angle_rad))
+        self.angle_rad = angle_degrees
+        self.velocity = Vector2(0, speed * math.sin(self.angle_rad))
         # Friction factor to gradually slow down the velocity
         self.friction = 0.98 
         self.color = color 
@@ -18,12 +18,11 @@ class CannonBall:
         self.height = height
 
     def update(self, time_step):
-        self.x += self.velocity.x * time_step
         self.y += self.velocity.y * time_step
-        
+
         # Apply friction to gradually slow down the velocity
         self.velocity *= self.friction
-        
+
         self.falling()
 
     def falling(self):
@@ -44,7 +43,7 @@ class CannonBall:
 
     def is_offscreen(self):
         print("Delete")
-        #return self.y > self.water_level
+        return self.y > self.water_level
     
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius)

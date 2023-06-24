@@ -73,11 +73,11 @@ cannonballs = []
 # Max cannonballs on screen
 max_cannonballs = random.randint(3, 5)
 
-def random_ball():
+def random_ball(existing_x_coordinates):
     global ball_radius, ball_mass
     # Generate random mass and radius
-    ball_radius = random.randint(5, 20)
-    ball_mass = random.randint(10, 50)
+    ball_radius = random.randint(10, 50)
+    ball_mass = random.randint(10, 90)
     return ball_radius, ball_mass
 
 
@@ -87,7 +87,7 @@ def spawn_cballs():
     num_balls = random.randint(1, max_cannonballs - len(cannonballs))
     for _ in range(num_balls):
         sp_x = random.randint(ball_radius, res_x - ball_radius)
-        sp_y = 5
+        sp_y = 10
         # Random color for each CannonBall
         color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
         ball_radius, ball_mass = random_ball()

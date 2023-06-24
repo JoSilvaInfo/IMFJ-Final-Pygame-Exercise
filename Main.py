@@ -24,13 +24,13 @@ BGImg = pygame.transform.scale(pygame.image.load("img/BG1.png"), (res_x, res_y))
 ## Player lives
 pl_lives = 3
 ## Define the size of the player
-pl_with, pl_height = 100, 120
+pl_width, pl_height = 100, 120
 ## Define the speed and jump height of the player
 pl_speed, pl_jump = 3, 100 
 ## Mass of the body in kg
 pl_mass = 10
 ## Load player image and re-size it 
-PLImg = pygame.transform.scale(pygame.image.load("img/Player.png"), (pl_with, pl_height))
+PLImg = pygame.transform.scale(pygame.image.load("img/Player.png"), (pl_width, pl_height))
 
 # Buoyancy parameters:
 ## Initial position of the water level
@@ -52,8 +52,11 @@ gravity = 9.8
 
 ## Cannon ball
 ball_radius = 10
-ball_mass = 5
+ball_mass = 30
 ball_speed = ball_radius * ball_mass
+# Delay between cannonball updates in milliseconds
+## Adjust this value to control the refresh rate of the cannonballs
+cannonball_delay = 100  
 
 # Game UI
 ## Defining fonts 
@@ -64,22 +67,31 @@ TEXT_COL = (0, 0, 0)
 def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
     screen.blit(img, (x, y))
-
-
-
+    
 # List to store CannonBall instances
 cannonballs = []  
 # Max cannonballs on screen
 max_cannonballs = random.randint(3, 5)
 
+def random_ball():
+    global ball_radius, ball_mass
+    # Generate random mass and radius
+    ball_radius = random.randint(5, 20)
+    ball_mass = random.randint(10, 50)
+    return ball_radius, ball_mass
+
+
 def spawn_cballs():
-     # Calculate the number of CannonBalls to spawn
+    global ball_radius, ball_mass
+    # Calculate the number of CannonBalls to spawn
     num_balls = random.randint(1, max_cannonballs - len(cannonballs))
     for _ in range(num_balls):
         sp_x = random.randint(ball_radius, res_x - ball_radius)
         sp_y = 5
         # Random color for each CannonBall
         color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        ball_radius, ball_mass = random_ball()
+        ball_speed = ball_radius * ball_mass
         ball = CannonBall(sp_x, sp_y, ball_radius, ball_mass, 0, ball_speed, color, water_level, gravity, pl_height)
         cannonballs.append(ball)
 
@@ -97,11 +109,6 @@ def main():
 
     # Movement key hold confirmations
     move_l, move_r, jumping = False, False, False
-
-    floating = False
-
-    # Event confirmation
-    shoot = False
     
     clock = pygame.time.Clock()
     # Keeping track of time
@@ -121,10 +128,11 @@ def main():
         elapsed_time = time.time() - start_time
         
         # Player object
-        player = pygame.Rect(pl_x, pl_y, pl_with, pl_height)
+        player = pygame.Rect(pl_x, pl_y, pl_width, pl_height)
         # Clears the screen with the same backgroung image
         screen.blit(BGImg, (0, 0))
-
+        # Draw ground
+        pygame.draw.line(screen, (0, 0, 0), (0, water_level), (res_x, water_level), 2)
         
         # Process events
         for event in pygame.event.get():
@@ -153,7 +161,7 @@ def main():
 
         if(move_r):
             # Check if inside bounds
-            if pl_x + pl_speed + pl_with <= res_x:
+            if pl_x + pl_speed + pl_width <= res_x:
                 # Move player
                 pl_x += pl_speed
         if(move_l):
@@ -178,25 +186,21 @@ def main():
             pl_y = water_level - pl_height
 
         
-        # Check if it's time to cannon balls a ball
-        current_time = time.time()
         if elapsed_time >= next_spawn_time:
-            shoot = True
-            # Schedule next spawn after 30 seconds
-            next_spawn_time = next_spawn_time + 1
-
-        if shoot:
-             # Spawn CannonBalls if the maximum number is not reached
+            # Spawn CannonBalls if the maximum number is not reached
             if len(cannonballs) < max_cannonballs:
                 spawn_cballs()
-            # Calculate time step based on frame rate to update the Canonballs
-            ## Convert milliseconds to seconds
-            time_step = clock.get_time() / 1000.0  
-            shoot = False
+            # Schedule next spawn after 30 seconds
+            next_spawn_time += 30
+            
+        time_step = 0.1
 
-            # Update CannonBalls
-            for ball in cannonballs:
-                ball.update(time_step)
+        # Update CannonBalls
+        for ball in cannonballs:
+            ball.update(time_step)
+
+            # Delay between cannonball updates
+            pygame.time.delay(cannonball_delay)
 
             # Handle CannonBall collisions
             for ball in cannonballs:
@@ -209,17 +213,12 @@ def main():
             for ball in cannonballs:
                 ball.draw(screen)
 
-            # Update screen
-            #pygame.display.update()
-
         draw_text (f"Time: {round(elapsed_time)}s", font, TEXT_COL, (res_x / 2) - 110, 20)
         draw_text (f"Lives: {pl_lives}", font, TEXT_COL, 50, 20)
 
         #platform.update()
         # Draw player in a determined location
         screen.blit(PLImg, player)
-        # Draw ground
-        pygame.draw.line(screen, (0, 0, 0), (0, water_level), (res_x, water_level), 2)
         # Update screen
         pygame.display.update()
         

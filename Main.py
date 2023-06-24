@@ -52,6 +52,8 @@ gravity = 9.8
 
 ## Cannon ball
 ball_radius = 10
+ball_mass = 5
+ball_speed = ball_radius * ball_mass
 
 # Game UI
 ## Defining fonts 
@@ -64,12 +66,31 @@ def draw_text(text, font, text_col, x, y):
     screen.blit(img, (x, y))
 
 
+
+# List to store CannonBall instances
+cannonballs = []  
+# Max cannonballs on screen
+max_cannonballs = random.randint(3, 5)
+
+def spawn_cballs():
+     # Calculate the number of CannonBalls to spawn
+    num_balls = random.randint(1, max_cannonballs - len(cannonballs))
+    for _ in range(num_balls):
+        sp_x = random.randint(ball_radius, res_x - ball_radius)
+        sp_y = 5
+        # Random color for each CannonBall
+        color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        ball = CannonBall(sp_x, sp_y, ball_radius, ball_mass, 0, ball_speed, color, water_level, gravity, pl_height)
+        cannonballs.append(ball)
+
+
 # Main game loop
 def main():
     # Initialize pygame, with the default parameters
     pygame.init()
 
     global pl_jump
+    global cannonballs
 
     # Define initial position
     pl_x, pl_y, pl_j_speed = 200, (water_level - pl_height), pl_jump 
@@ -81,9 +102,6 @@ def main():
 
     # Event confirmation
     shoot = False
-
-    # List to store CannonBall instances
-    cannonballs = []  
     
     clock = pygame.time.Clock()
     # Keeping track of time
@@ -93,16 +111,7 @@ def main():
     elapsed_time = 0
 
     # Initial spawn after 30 seconds
-    next_spawn_time = 5
-
-    def spawn_cballs():
-        num_balls = random.randint(3, 4)  # Generate a random number of CannonBalls to spawn
-        for _ in range(num_balls):
-            sp_x = 0
-            sp_y = random.randint(ball_radius, res_y - ball_radius)
-            color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))  # Random color for each CannonBall
-            ball = CannonBall(sp_x, sp_y, ball_radius, 0, 0, 0, color)
-            cannonballs.append(ball)
+    next_spawn_time = 1
 
     # Game loop, runs forever
     while StartGame:
@@ -174,10 +183,12 @@ def main():
         if elapsed_time >= next_spawn_time:
             shoot = True
             # Schedule next spawn after 30 seconds
-            next_spawn_time = next_spawn_time + 5
+            next_spawn_time = next_spawn_time + 1
 
         if shoot:
-            print("Shoot!")
+             # Spawn CannonBalls if the maximum number is not reached
+            if len(cannonballs) < max_cannonballs:
+                spawn_cballs()
             # Calculate time step based on frame rate to update the Canonballs
             ## Convert milliseconds to seconds
             time_step = clock.get_time() / 1000.0  
@@ -193,9 +204,13 @@ def main():
 
             # Remove CannonBalls that are offscreen
             cannonballs = [ball for ball in cannonballs if not ball.is_offscreen()]
+
             # Draw CannonBalls
             for ball in cannonballs:
                 ball.draw(screen)
+
+            # Update screen
+            #pygame.display.update()
 
         draw_text (f"Time: {round(elapsed_time)}s", font, TEXT_COL, (res_x / 2) - 110, 20)
         draw_text (f"Lives: {pl_lives}", font, TEXT_COL, 50, 20)

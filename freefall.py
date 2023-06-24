@@ -1,22 +1,36 @@
 import pygame
 from pygame.math import Vector2
 import math
-import Main
+#import Main
 
-class CannonBall():
-    def __init__(self, x, y, image, scale):
-        width = image.get_width()
-        height = image.get_height()
-        self.mass = 1.5
-        self.image = pygame.transform.scale(image, (int(width * scale), int(height * scale)))
-        self.rect = self.image.get_rect()
-        self.rect.topleft = (x, y)
-        self.clicked = False
+class CannonBall:
+    def __init__(self, x, y, radius, mass, angle_degrees, speed):
+        self.x = x
+        self.y = y
+        self.radius = radius
+        self.mass = mass
+        self.angle_rad = math.radians(angle_degrees)
+        self.velocity = Vector2(speed * math.cos(self.angle_rad), speed * math.sin(self.angle_rad))
+        # Friction factor to gradually slow down the velocity
+        self.friction = 0.98  
+
+    def update(self, time_step):
+        self.x += self.velocity.x * time_step
+        self.y += self.velocity.y * time_step
+        
+        # Apply friction to gradually slow down the velocity
+        self.velocity *= self.friction
+
+    #def falling(self):
+        #if self.y + self.height < Main.water_level:  # Rectangle is in the free-fall phase
+                # Calculate the net force
+                #net_force = self.mass * Main.gravity
+            
+
+                # Apply the net force to the rectangle's position
+                #acceleration = net_force / self.mass
+                #rectangle_y += acceleration
     
-    def draw(self, surface):
-        action = False
-		#get position
-        pygame.draw.rect(surface, "red", self.rect.topleft, self.width, self.height)
     
     def handle_cball_collision(self, player):
         distance = math.sqrt((player.x - self.x) ** 2 + (player.y - self.y) ** 2)
@@ -31,5 +45,11 @@ class CannonBall():
             dot_product = relative_velocity.dot(normal_vector)
 
             # Check if the balls are moving towards each other
-            if dot_product < 0:
-                Main.pl_lives -= 1
+            #if dot_product < 0:
+                #Main.pl_lives -= 1
+
+    #def is_offscreen(self):
+        #return self.x > Main.res_y
+    
+    def draw(self, screen):
+        pygame.draw.circle(screen, self.color, (self.x, self.y), self.radius)

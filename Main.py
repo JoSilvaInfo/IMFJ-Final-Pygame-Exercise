@@ -2,7 +2,7 @@ import pygame
 import math
 import random
 import time
-import freefall
+from freefall import CannonBall
 #import Menu
 
 pygame.font.init()
@@ -19,15 +19,7 @@ pygame.display.set_caption("Pirate Escape")
 ## Load background image and re-size it 
 BGImg = pygame.transform.scale(pygame.image.load("img/BG1.png"), (res_x, res_y))
 
-#Surfaces
-## Floatable 
-#Plank_Img = pygame.transform.scale(pygame.image.load("img/Wood.png"), (48, 64))
-## Sincable 
-#Twig_Img = pygame.transform.scale(pygame.image.load("img/Tree.png"), (48, 64))
-## Water 
-#Water_Img = pygame.transform.scale(pygame.image.load("img/Water.png"), (48, 64))
-
-#Player parameters:
+# Player parameters:
 ## Player lives
 pl_lives = 3
 ## Define the size of the player
@@ -39,8 +31,6 @@ pl_mass = 10
 ## Load player image and re-size it 
 PLImg = pygame.transform.scale(pygame.image.load("img/Player.png"), (pl_with, pl_height))
 
-
-
 # Buoyancy parameters:
 ## Initial position of the water level
 water_level = 850 
@@ -49,6 +39,24 @@ water_density = 4.5
 buoyant_force = 5 
 # Gravitational force
 gravity = 9.8
+
+#Objects
+## Floatable 
+#Plank_Img = pygame.transform.scale(pygame.image.load("img/Wood.png"), (48, 64))
+
+# Platform object
+platform = pygame.Rect(200, water_level, 50, 30)
+float_direction = -1
+float_speed = 0.5
+float_range = 40
+
+## Sincable 
+#Twig_Img = pygame.transform.scale(pygame.image.load("img/Tree.png"), (48, 64))
+## Water 
+#Water_Img = pygame.transform.scale(pygame.image.load("img/Water.png"), (48, 64))
+
+## Cannon ball
+ball_radius = 10
 
 # Game UI
 ## Defining fonts 
@@ -66,11 +74,15 @@ def main():
     # Initialize pygame, with the default parameters
     pygame.init()
 
+    global pl_jump
+
     # Define initial position
     pl_x, pl_y, pl_j_speed = 200, (water_level - pl_height), pl_jump 
 
     # Movement key hold confirmations
     move_l, move_r, jumping = False, False, False
+
+    floating = False
 
     # Event confirmation
     shoot = False
@@ -82,6 +94,15 @@ def main():
     ## 
     elapsed_time = 0
 
+    # Initial spawn after 30 seconds
+    next_spawn_time = time.time() + 30  
+
+    def spawn_cballs():
+        sp_x = 0
+        sp_y = random.randint(ball_radius, res_y - ball_radius)
+        ball = CannonBall(CannonBall.x, CannonBall.y, ball_radius)
+        CannonBall.append(ball)
+
     # Game loop, runs forever
     while StartGame:
         # Delay while loop for 60 fps
@@ -89,6 +110,9 @@ def main():
         # Get the seconds since start of the while loop
         elapsed_time = time.time() - start_time
         
+        
+        # Player object
+        player = pygame.Rect(pl_x, pl_y, pl_with, pl_height)
         # Clears the screen with the same backgroung image
         screen.blit(BGImg, (0, 0))
         
@@ -108,6 +132,7 @@ def main():
                     move_r = True
                 if (event.key == pygame.K_UP):
                     jumping = True
+                    pl_j_speed = pl_jump
             else:
                     move_l = False
                     move_r = False
@@ -126,28 +151,46 @@ def main():
             if pl_x - pl_speed >= 50:
                 # Move player
                 pl_x -= pl_speed
-        if(jumping):
+
+        if jumping:
             pl_y -= pl_j_speed 
             pl_j_speed -= gravity
             if pl_j_speed < -pl_jump:
                 jumping = False
-                pl_j_speed = pl_jump
 
-        if shoot:
-            if freefall.CannonBall.y + freefall.CannonBall.height < water_level:  # Rectangle is in the free-fall phase
-                # Calculate the net force
-                net_force = freefall.CannonBall.mass * gravity
+        # Apply gravity to the player
+        pl_y += gravity
+
+        # Check if player exceeds screen boundaries
+        if pl_y < 0:
+            pl_y = 0
+        elif pl_y > water_level - pl_height:
+            pl_y = water_level - pl_height
             
+        # Check collision with the platform
+        if player.colliderect(platform) and pl_jump > 0:
+            pl_y = platform.y - pl_height
+            pl_jump = 0
 
-                # Apply the net force to the rectangle's position
-                acceleration = net_force / freefall.CannonBall.mass
-                rectangle_y += acceleration
-
+        # Platform floating and bouncing
+        if floating:
+            platform.y += float_speed * float_direction
+            if abs(platform.y - platform.y) >= float_range:
+                float_direction *= -1
+        
+        # Check if it's time to cannon balls a ball
+        current_time = time.time()
+        if current_time >= next_spawn_time:
+            spawn_cballs()
+            # Schedule next spawn after 30 seconds
+            next_spawn_time = current_time + 30
         
         draw_text (f"Time: {round(elapsed_time)}s", font, TEXT_COL, (res_x / 2) - 110, 20)
         draw_text (f"Lives: {pl_lives}", font, TEXT_COL, 50, 20)
+
         # Draw player in a determined location
-        screen.blit(PLImg, (pl_x, pl_y))
+        screen.blit(PLImg, player)
+        pygame.draw.rect(screen, (255, 0, 0), platform)
         # Draw ground
         pygame.draw.line(screen, (0, 0, 0), (0, water_level), (res_x, water_level), 2)
         # Update screen

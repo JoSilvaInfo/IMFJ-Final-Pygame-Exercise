@@ -1,54 +1,53 @@
 import pygame
+import time
 from pygame.math import Vector2
 
 class Platform:
-    def __init__(self, x, y, width, height, float_range, float_speed, water_level, water_density, gravity):
+    def __init__(self, x, y, width, height, water_level, water_density, gravity, mass, buoyant_force):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
-        self.float_range = float_range
-        self.float_speed = float_speed
         self.float_direction = -1
         self.water_level = water_level
         self.water_density = water_density
         self.gravity = gravity
+        self.mass = mass
+        self.b_force = buoyant_force
         self.submerged = False
         self.original_y = y
+        self.target_buoyancy = buoyant_force
 
     def get_rect(self):
         return pygame.Rect(self.x, self.y, self.width, self.height)
 
     def update(self):
-        # Move the platform up and down within the float range
-        self.y += self.float_speed * self.float_direction
+        # Initial phase to start buoyancy: free-fall phase
+        if self.y + self.height < self.water_level:  
+            # Calculate the net force
+            net_force = self.mass * self.gravity
 
-        # Reverse the float direction if the platform reaches the float range boundaries
-        if abs(self.y - self.original_y) >= self.float_range:
-            self.float_direction *= -1
+            # Apply the net force to the rectangle's position
+            acceleration = net_force / self.mass
+            self.y += acceleration
 
-        # Check if the platform is submerged in water
-        if self.y + self.height >= self.water_level:
-            self.submerged = True
-        else:
-            self.submerged = False
+        # Rectangle is in the buoyancy phase
+        else:  
+            # Calculate the submerged depth
+            submerged_depth = (self.y + self.height) - self.water_level
+            
+            # Calculate the buoyant force based on the submerged depth and target buoyancy
+            target_buoyant_force = (self.target_buoyancy - self.b_force) * submerged_depth / self.height + self.b_force
 
-    def calculate_buoyancy_force(self):
-        # Calculate the volume of the submerged part of the platform
-        submerged_height = self.y + self.height - self.water_level
-        volume = self.width * submerged_height
+            # Calculate the net force
+            net_force = self.mass * self.gravity - target_buoyant_force
 
-        # Calculate the buoyant force using Archimedes' principle
-        buoyant_force = volume * self.water_density * self.gravity
+            # Apply the net force to the rectangle's position
+            acceleration = net_force / self.mass
+            self.y += acceleration
 
-        return buoyant_force
-
-    def apply_buoyancy(self):
-        # Calculate the buoyant force
-        buoyant_force = self.calculate_buoyancy_force()
-
-        # Apply the buoyant force to the platform
-        self.y -= buoyant_force
+    def set_buoyancy(self, target_buoyancy):
+        self.target_buoyancy = target_buoyancy
 
     def draw(self, screen):
         pygame.draw.rect(screen, (255, 0, 0), (self.x, self.y, self.width, self.height))

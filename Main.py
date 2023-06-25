@@ -31,6 +31,8 @@ pl_speed, pl_jump = 3, 100
 pl_mass = 10
 pl_accel = 0.2
 pl_friction = 0.1
+# Max speed for the player
+pl_max_speed = 5
 ## Load player image and re-size it 
 PLImg = pygame.transform.scale(pygame.image.load("img/Player.png"), (pl_width, pl_height))
 
@@ -40,8 +42,20 @@ water_level = 850
 ## Density of water (higher value for denser water)
 water_density = 4.5 
 buoyant_force = 5 
+
+
 # Gravitational force
 gravity = 9.8
+
+## Platform
+plt_height = 10
+plt_width = 30
+# Platform mass
+plt_mass = 1.5
+# List to store Platform instances
+platforms = []  
+# Max platfomrs on screen
+max_platforms = random.randint(4, 5)
 
 ## Cannon ball
 ball_radius = 10
@@ -49,7 +63,12 @@ ball_mass = 30
 ball_speed = ball_radius * ball_mass
 # Delay between cannonball updates in milliseconds
 ## Adjust this value to control the refresh rate of the cannonballs
-cannonball_delay = 100  
+cannonball_delay = 100 
+# List to store CannonBall instances
+cannonballs = []
+remove_list = []  
+# Max cannonballs on screen
+max_cannonballs = random.randint(2, 4)
 
 # Game UI
 ## Defining fonts 
@@ -60,11 +79,30 @@ TEXT_COL = (0, 0, 0)
 def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
     screen.blit(img, (x, y))
-    
-# List to store CannonBall instances
-cannonballs = []  
-# Max cannonballs on screen
-max_cannonballs = random.randint(2, 4)
+
+
+def random_platform():
+    global plt_width, plt_height, plt_mass
+    # Generate random proportions
+    plt_width = random.randint(50, 150)
+    plt_height = random.randint(10, 30)
+    plt_mass = random.uniform(0.5, 1)
+    return plt_width, plt_height, plt_mass
+
+
+def spawn_platform():
+    global plt_width, plt_height, plt_mass
+    # Calculate the number of Platforms to spawn
+    num_platforms = random.randint(3, max_platforms - len(platforms))
+    for _ in range(num_platforms):
+        pltp_x = random.randint(plt_width + 50, res_x - ( 50 + plt_width))
+        pltp_y = water_level
+        plt_width, plt_height, plt_mass = random_platform()
+        plt_buoyance = 2 / (plt_width * plt_mass)
+        print(plt_buoyance)
+        # Include the 'lives' argument when creating a CannonBall instance
+        platform = Platform(pltp_x, pltp_y, plt_width, plt_height, water_level, water_density, gravity, plt_mass, plt_buoyance)
+        platforms.append(platform)
 
 def random_ball():
     global ball_radius, ball_mass
@@ -91,16 +129,14 @@ def spawn_cballs():
 
 # Main game loop
 def main():
-    # Initialize pygame, with the default parameters
-    pygame.init()
 
-    global pl_jump
-    global cannonballs
+    global pl_jump, cannonballs, remove_list, plt_mass, plt_buoyance
 
     # Define initial position
     pl_x, pl_y, pl_j_speed = 200, (water_level - pl_height), pl_jump 
     pl_accel_x = 0
     pl_vel_x = 0
+    
     # Movement key hold confirmations
     move_l, move_r, jumping = False, False, False
     
@@ -115,8 +151,8 @@ def main():
     next_spawn_time = 30
     
     # Create a Platform object
-    platform = Platform(random.randint(50, res_x - 50), water_level, 40, 20, 50, 1, water_level, water_density, gravity)
-
+    #platform = Platform(random.randint(50, res_x - 50), water_level, plt_width, plt_height, water_level, water_density, gravity, plt_mass, buoyant_force)
+    spawn_platform()
 
     # Game loop, runs forever
     while StartGame:
@@ -132,8 +168,9 @@ def main():
         # Draw ground
         pygame.draw.line(screen, (0, 0, 0), (0, water_level), (res_x, water_level), 2)
         # Update and draw the platform
-        platform.update()
-        platform.draw(screen)
+        for platform in platforms:
+            platform.update()
+            platform.draw(screen)
         
         # Process events
         for event in pygame.event.get():
@@ -180,6 +217,12 @@ def main():
         # Update velocity based on acceleration
         pl_vel_x += pl_accel_x
 
+        # Limit the velocity to the maximum speed
+        if pl_vel_x > pl_max_speed:
+            pl_vel_x = pl_max_speed
+        elif pl_vel_x < -pl_max_speed:
+            pl_vel_x = -pl_max_speed
+
         # Apply velocity to player's position
         pl_x += pl_vel_x
 
@@ -206,7 +249,13 @@ def main():
 
         # Check for collision between player and platform
         if player.colliderect(platform.get_rect()):
+            print("Collide!")
+            plt_mass += pl_mass
+            plt_buoyance = 2 / (plt_width * plt_mass)
+        else:
+            plt_mass -= pl_mass
             # Apply buoyancy to the platform when the player is on top
+            platform.set_buoyancy(plt_buoyance, time_step)
             platform.apply_buoyancy()
 
         
@@ -227,11 +276,11 @@ def main():
             pygame.time.delay(cannonball_delay)
 
             # Remove CannonBalls that are offscreen or collided with the player
-            if ball.offscreen  or ball.collided_with_player:
-                cannonballs.remove(ball)
-            else:
-                # Handle CannonBall collisions
-                ball.handle_cball_collision(player)
+            if ball.offscreen or ball.collided_with_player:
+                cannonballs[:] = [ball for ball in cannonballs if ball not in remove_list]
+
+            # Handle CannonBall collisions
+            ball.handle_cball_collision(player)
 
             # Draw CannonBalls
             for ball in cannonballs:

@@ -20,13 +20,16 @@ class CannonBall:
         self.collided_with_player = False
         self.offscreen = False
 
-    def update(self, time_step):
+    def update(self, time_step, cannonballs):
         self.y += self.velocity.y * time_step
 
         # Apply friction to gradually slow down the velocity
         self.velocity *= self.friction
 
         self.falling()
+
+        if self.y > self.water_level:
+            self.is_offscreen(cannonballs)
 
     def falling(self):
         if self.y + self.height < self.water_level:  # Rectangle is in the free-fall phase
@@ -44,10 +47,10 @@ class CannonBall:
             self.lives -= 1
             self.collided_with_player = True
 
-    def is_offscreen(self):
-        if self.y > self.water_level:
-            print("Destroy")
-            self.offscreen = True
+    def is_offscreen(self, cannonballs):
+        print("Destroy")
+        self.offscreen = True
+        cannonballs.remove(self)
     
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius)

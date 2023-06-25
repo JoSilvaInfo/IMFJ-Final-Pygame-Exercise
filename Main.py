@@ -29,6 +29,8 @@ pl_width, pl_height = 100, 120
 pl_speed, pl_jump = 3, 100 
 ## Mass of the body in kg
 pl_mass = 10
+pl_accel = 0.2
+pl_friction = 0.1
 ## Load player image and re-size it 
 PLImg = pygame.transform.scale(pygame.image.load("img/Player.png"), (pl_width, pl_height))
 
@@ -97,7 +99,8 @@ def main():
 
     # Define initial position
     pl_x, pl_y, pl_j_speed = 200, (water_level - pl_height), pl_jump 
-
+    pl_accel_x = 0
+    pl_vel_x = 0
     # Movement key hold confirmations
     move_l, move_r, jumping = False, False, False
     
@@ -109,7 +112,7 @@ def main():
     elapsed_time = 0
 
     # Initial spawn after 30 seconds
-    next_spawn_time = 1
+    next_spawn_time = 30
     
     # Create a Platform object
     platform = Platform(random.randint(50, res_x - 50), water_level, 40, 20, 50, 1, water_level, water_density, gravity)
@@ -135,41 +138,59 @@ def main():
         # Process events
         for event in pygame.event.get():
             # Checks if the user closed the window
-            if (event.type == pygame.QUIT):
+            if event.type == pygame.QUIT:
                 # Exits the application immediately
                 return
-            #checks user input
-            elif (event.type == pygame.KEYDOWN):
-                if (event.key == pygame.K_ESCAPE):
+            # checks user input
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
                     return
-                if (event.key == pygame.K_LEFT):
+                if event.key == pygame.K_LEFT:
                     move_l = True
-                if (event.key == pygame.K_RIGHT):
+                if event.key == pygame.K_RIGHT:
                     move_r = True
-                if (event.key == pygame.K_UP):
+                if event.key == pygame.K_UP:
                     jumping = True
                     pl_j_speed = pl_jump
-            else:
+                    
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_LEFT and move_l:
                     move_l = False
+                if event.key == pygame.K_RIGHT and move_r:
                     move_r = False
 
-        # Check ifplayer is still alive 
-        #if pl_lives <=0:
-            #Menu.gameover()
+        # Apply friction to the velocity
+        if pl_vel_x > 0:
+            pl_vel_x -= pl_friction
+            if pl_vel_x < 0:
+                pl_vel_x = 0
+        elif pl_vel_x < 0:
+            pl_vel_x += pl_friction
+            if pl_vel_x > 0:
+                pl_vel_x = 0
 
-        if(move_r):
-            # Check if inside bounds
-            if pl_x + pl_speed + pl_width <= res_x:
-                # Move player
-                pl_x += pl_speed
-        if(move_l):
-            # Check if inside bounds
-            if pl_x - pl_speed >= 50:
-                # Move player
-                pl_x -= pl_speed
+        # Check user input for movement
+        if move_r:
+            pl_accel_x = pl_accel
+        elif move_l:
+            pl_accel_x = -pl_accel
+        else:
+            pl_accel_x = 0
+
+        # Update velocity based on acceleration
+        pl_vel_x += pl_accel_x
+
+        # Apply velocity to player's position
+        pl_x += pl_vel_x
+
+        # Check if inside bounds
+        if pl_x + pl_width > res_x:
+            pl_x = res_x - pl_width
+        elif pl_x < 50:
+            pl_x = 50
 
         if jumping:
-            pl_y -= pl_j_speed 
+            pl_y -= pl_j_speed
             pl_j_speed -= gravity
             if pl_j_speed < -pl_jump:
                 jumping = False

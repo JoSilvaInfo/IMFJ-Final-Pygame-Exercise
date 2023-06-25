@@ -13,7 +13,7 @@ class ShootBullet:
         self.vx = 0
         self.vy = 0
         self.t = 0
-        self.radius=5
+        self.radius = 5
         self.gravity = gravity
         self.lives = lives
         self.water_level = water_level
@@ -30,7 +30,7 @@ class ShootBullet:
     
     def handle_collision(self, player):
         distance = math.sqrt((player.x - self.x) ** 2 + (player.y - self.y) ** 2)
-        if distance <= self.radius + player.height:
+        if distance <= self.radius + player.width:
             #self.lives -= 1
             self.x = 10
             self.y = self.water_level

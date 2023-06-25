@@ -1,9 +1,8 @@
 import pygame
-import time
-from pygame.math import Vector2
+import math
 
 class ShootBullet:
-    def __init__(self, x, y, res_x, res_y, v0, angle, gravity):
+    def __init__(self, x, y, res_x, res_y, v0, angle, gravity, lives, water_level):
         self.x = x
         self.y = y
         self.res_x = res_x
@@ -16,6 +15,9 @@ class ShootBullet:
         self.t = 0
         self.radius=5
         self.gravity = gravity
+        self.lives = lives
+        self.water_level = water_level
+        self.offscreen = False
 
     def update(self):
         self.t += self.dt
@@ -26,8 +28,27 @@ class ShootBullet:
     def get_position(self):
         return (self.x, self.y)
     
+    def handle_collision(self, player):
+        distance = math.sqrt((player.x - self.x) ** 2 + (player.y - self.y) ** 2)
+        if distance <= self.radius + player.height:
+            #self.lives -= 1
+            self.x = 10
+            self.y = self.water_level
+            print(self.x)
+            print(self.y)
+            print(self.lives)
+            return self.lives, self.x, self.y
+            
+
     def is_on_screen(self):
         return 0 <= self.x <= self.res_x and 0 <= self.y <= self.res_y
+    
+    def is_offscreen(self):
+            self.x = 10
+            self.y = self.water_level
+            print(self.x)
+            print(self.y)
+            return self.x, self.y
     
     def draw(self, surface):
         pygame.draw.circle(surface, (255,160,122), (int(self.x), int(self.y)), self.radius)

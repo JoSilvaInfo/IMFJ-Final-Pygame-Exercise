@@ -43,11 +43,11 @@ class Platform:
             if rect_density <= self.water_density:
                 self.b_force += 0.1* rect_density * submerged_volume * self.gravity
                 #time.sleep(0.1) 
-                print("up")
+                #print("up")
             else:
                 self.b_force -= 0.1* self.water_density * submerged_volume * self.gravity
                 #time.sleep(0.1) 
-                print("down") 
+                #print("down") 
             
             # Calculate the net force
             net_force = self.mass * self.gravity - self.b_force

@@ -7,6 +7,8 @@ from platforms import Platform
 from shoot import ShootBullet
 #from menu import MainMenu, GameOver, Pause
 
+# Initialize Pygame
+pygame.init()
 pygame.font.init()
 
 StartGame = True
@@ -76,7 +78,6 @@ max_cannonballs = random.randint(2, 4)
 # Initialize the time variable and flag variables
 t = 0
 shoot = False
-hit = False
 # Create an empty list to store the positions
 positions = []
 
@@ -137,7 +138,7 @@ def spawn_cballs():
 # Main game loop
 def main():
 
-    global pl_jump, cannonballs, remove_list, plt_mass, plt_buoyance, t, shoot, hit
+    global pl_jump, pl_lives, cannonballs, remove_list, plt_mass, plt_buoyance, t, shoot
 
     # Movement key hold confirmations
     move_l, move_r, jumping = False, False, False
@@ -161,7 +162,7 @@ def main():
     # Create a Platform object
     spawn_platform()
     # Initialize Cannon
-    shoot_projectile = ShootBullet(10, water_level, res_x, res_y, res_y / 2, 0, gravity)
+    projectile = ShootBullet(10, water_level, res_x, res_y, res_y / 2, 0, gravity, pl_lives, water_level)
 
 
     # Game loop, runs forever
@@ -257,7 +258,6 @@ def main():
         for platform in platforms:
             # Check for collision between player and platform
             if player.colliderect(platform.get_rect()):
-                print("Collide!")
                 # Player is on top of the platform, update its buoyancy attribute
                 platform.buoyant_force = plt_buoyance
             else:
@@ -293,59 +293,67 @@ def main():
         
 
         if elapsed_time >= next_spawn_time_shootballs:
-            
-            dx = pl_x - shoot_projectile.x
-            dy = pl_y - shoot_projectile.y
-            d = math.sqrt(dx**2 + dy**2)#distance between the starting point and the target point in two-dimensional space.
+            dx = pl_x - projectile.x
+            dy = (pl_y - water_level) - projectile.y
+            d = math.sqrt(dx**2 + dy**2)  # Distance between the starting point and the target point in two-dimensional space.
             angle = math.degrees(math.atan2(dy, dx))
             
-            if(angle==0):
-                angle=45
-            #intial velocity
-            v0 = math.sqrt((d * gravity) / (math.sin(2 * math.radians(angle))))                    
-            shoot_projectile.vx = v0 * math.cos(math.radians(angle))
-            shoot_projectile.vy = -v0 * math.sin(math.radians(angle)) + 0.5 * gravity * shoot_projectile.dt
-            shoot_projectile.v0 = v0
-            shoot_projectile.angle = angle
-            shoot_projectile.update()
-            t += shoot_projectile.dt
-        
+            if angle <= 0:
+                angle = 45
+
+            # Calculate initial velocity
+            denominator = math.sin(2 * math.radians(angle))
+            
+            if denominator > 0:
+                v0 = math.sqrt((d * gravity) / denominator)
+                #print("Initial velocity:", v0)
+            #else:
+                #print("Invalid input. Cannot calculate initial velocity.")
+
+            projectile.vx = v0 * math.cos(math.radians(angle))
+            projectile.vy = -v0 * math.sin(math.radians(angle)) + 0.5 * gravity * projectile.dt
+            projectile.v0 = v0
+            projectile.angle = angle
+
+            projectile.update()
+            t += projectile.dt
+
+        # Check if the projectile hits the character
+        if math.sqrt((pl_x - projectile.x)**2 + (pl_y - projectile.y)**2) <= pl_width + projectile.radius:
+            projectile.handle_collision(player)
+            pl_lives -= 1
+            positions.clear()
+            # Schedule next spawn after 30 seconds
+            next_spawn_time_shootballs += 10
+
         # Check if the projectile is still on the screen
-        if shoot_projectile.is_on_screen():
+        if projectile.is_on_screen():
             # Add the position to the list
-            positions.append(shoot_projectile.get_position())
+            positions.append(projectile.get_position())
+            # Draw the projectile
+            projectile.draw(screen)
 
         else:
-            # Stop the simulation
-            #running = False
-            projectile = shoot_projectile(10, res_y/2, 0, 0)  # Set initial velocity to zero
-
-            dx = pl_x - shoot_projectile.x
-            dy = pl_y - shoot_projectile.y
-            d = math.sqrt(dx**2 + dy**2)#distance between the starting point and the target point in two-dimensional space.
-            angle = math.degrees(math.atan2(dy, dx))
-                    
-            if(angle==0):
-                angle=45
-                    #intial velocity
-            v0 = math.sqrt((d * gravity) / (math.sin(2 * math.radians(angle))))                    
-            shoot_projectile.vx = v0 * math.cos(math.radians(angle))
-            shoot_projectile.vy = -v0 * math.sin(math.radians(angle)) + 0.5 * gravity * projectile.dt
-            shoot_projectile.v0 = v0
-            shoot_projectile.angle = angle
+            projectile.is_offscreen()
+            projectile.update()
+            positions.clear()
+            # Schedule next spawn after 30 seconds
+            next_spawn_time_shootballs += 10
         
-        for position in positions:
-            pygame.draw.circle(screen, (255, 255, 255), position, 2)
 
         draw_text (f"Time: {round(elapsed_time)}s", font, TEXT_COL, (res_x / 2) - 110, 20)
         draw_text (f"Lives: {pl_lives}", font, TEXT_COL, 50, 20)
 
         for platform in platforms:
             platform.update()
+        
+        for position in positions:
+            pygame.draw.circle(screen, (255, 255, 255), position, 2)
+
         # Draw player in a determined location
         screen.blit(PLImg, player)
         # Draw the projectile
-        shoot_projectile.draw(screen)
+        projectile.draw(screen)
         # Update the screen
         pygame.display.flip()
         

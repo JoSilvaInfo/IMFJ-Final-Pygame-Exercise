@@ -4,6 +4,7 @@ import random
 import time
 from freefall import CannonBall
 from platforms import Platform
+from shoot import ShootBullet
 #from menu import MainMenu, GameOver, Pause
 
 pygame.font.init()
@@ -52,6 +53,7 @@ plt_height = 10
 plt_width = 30
 # Platform mass
 plt_mass = 1.5
+plt_buoyance = 0.5
 # List to store Platform instances
 platforms = []  
 # Max platfomrs on screen
@@ -70,6 +72,14 @@ remove_list = []
 # Max cannonballs on screen
 max_cannonballs = random.randint(2, 4)
 
+## Shot projectile
+# Initialize the time variable and flag variables
+t = 0
+shoot = False
+hit = False
+# Create an empty list to store the positions
+positions = []
+
 # Game UI
 ## Defining fonts 
 font = pygame.font.SysFont("arialblack", 50)
@@ -82,25 +92,22 @@ def draw_text(text, font, text_col, x, y):
 
 
 def random_platform():
-    global plt_width, plt_height, plt_mass
+    global plt_width, plt_height, plt_mass, plt_buoyance
     # Generate random proportions
     plt_width = random.randint(50, 150)
     plt_height = random.randint(10, 30)
     plt_mass = random.uniform(0.5, 1)
-    return plt_width, plt_height, plt_mass
+    plt_buoyance = 2 / (plt_width * plt_mass)
+    return plt_width, plt_height, plt_mass, plt_buoyance
 
 
 def spawn_platform():
     global plt_width, plt_height, plt_mass
-    # Calculate the number of Platforms to spawn
     num_platforms = random.randint(3, max_platforms - len(platforms))
     for _ in range(num_platforms):
-        pltp_x = random.randint(plt_width + 50, res_x - ( 50 + plt_width))
+        pltp_x = random.randint(plt_width + 50, res_x - (50 + plt_width))
         pltp_y = water_level
-        plt_width, plt_height, plt_mass = random_platform()
-        plt_buoyance = 2 / (plt_width * plt_mass)
-        print(plt_buoyance)
-        # Include the 'lives' argument when creating a CannonBall instance
+        plt_width, plt_height, plt_mass, plt_buoyance = random_platform()
         platform = Platform(pltp_x, pltp_y, plt_width, plt_height, water_level, water_density, gravity, plt_mass, plt_buoyance)
         platforms.append(platform)
 
@@ -130,34 +137,35 @@ def spawn_cballs():
 # Main game loop
 def main():
 
-    global pl_jump, cannonballs, remove_list, plt_mass, plt_buoyance
+    global pl_jump, cannonballs, remove_list, plt_mass, plt_buoyance, t, shoot, hit
+
+    # Movement key hold confirmations
+    move_l, move_r, jumping = False, False, False
 
     # Define initial position
     pl_x, pl_y, pl_j_speed = 200, (water_level - pl_height), pl_jump 
     pl_accel_x = 0
     pl_vel_x = 0
-    
-    # Movement key hold confirmations
-    move_l, move_r, jumping = False, False, False
+    # Initial for Cannonballs spawn after 30 seconds
+    next_spawn_time_cannonballs = 30
+    # Initial for shot balls spawn after 10 seconds
+    next_spawn_time_shootballs = 10
     
     clock = pygame.time.Clock()
     # Keeping track of time
     ## Gives the current time
     start_time = time.time()
-    ## 
+    ## Time so far
     elapsed_time = 0
-
-    # Initial spawn after 30 seconds
-    next_spawn_time = 30
     
     # Create a Platform object
-    #platform = Platform(random.randint(50, res_x - 50), water_level, plt_width, plt_height, water_level, water_density, gravity, plt_mass, buoyant_force)
     spawn_platform()
+    # Initialize Cannon
+    shoot_projectile = ShootBullet(10, water_level, res_x, res_y, res_y / 2, 0, gravity)
+
 
     # Game loop, runs forever
     while StartGame:
-        # Delay while loop for 90 fps
-        clock.tick(90)
         # Get the seconds since start of the while loop
         elapsed_time = time.time() - start_time
         
@@ -169,7 +177,6 @@ def main():
         pygame.draw.line(screen, (0, 0, 0), (0, water_level), (res_x, water_level), 2)
         # Update and draw the platform
         for platform in platforms:
-            platform.update()
             platform.draw(screen)
         
         # Process events
@@ -247,24 +254,22 @@ def main():
         elif pl_y > water_level - pl_height:
             pl_y = water_level - pl_height
 
-        # Check for collision between player and platform
-        if player.colliderect(platform.get_rect()):
-            print("Collide!")
-            plt_mass += pl_mass
-            plt_buoyance = 2 / (plt_width * plt_mass)
-        else:
-            plt_mass -= pl_mass
-            # Apply buoyancy to the platform when the player is on top
-            platform.set_buoyancy(plt_buoyance, time_step)
-            platform.apply_buoyancy()
-
+        for platform in platforms:
+            # Check for collision between player and platform
+            if player.colliderect(platform.get_rect()):
+                print("Collide!")
+                # Player is on top of the platform, update its buoyancy attribute
+                platform.buoyant_force = plt_buoyance
+            else:
+                # Player is not on top of the platform, reset its buoyancy attribute
+                platform.buoyant_force = 0
         
-        if elapsed_time >= next_spawn_time:
+        if elapsed_time >= next_spawn_time_cannonballs:
             # Spawn CannonBalls if the maximum number is not reached
             if len(cannonballs) < max_cannonballs:
                 spawn_cballs()
             # Schedule next spawn after 30 seconds
-            next_spawn_time += 30
+            next_spawn_time_cannonballs += 30
             
         time_step = 0.1
 
@@ -285,14 +290,71 @@ def main():
             # Draw CannonBalls
             for ball in cannonballs:
                 ball.draw(screen)
+        
+
+        if elapsed_time >= next_spawn_time_shootballs:
+            
+            dx = pl_x - shoot_projectile.x
+            dy = pl_y - shoot_projectile.y
+            d = math.sqrt(dx**2 + dy**2)#distance between the starting point and the target point in two-dimensional space.
+            angle = math.degrees(math.atan2(dy, dx))
+            
+            if(angle==0):
+                angle=45
+            #intial velocity
+            v0 = math.sqrt((d * gravity) / (math.sin(2 * math.radians(angle))))                    
+            shoot_projectile.vx = v0 * math.cos(math.radians(angle))
+            shoot_projectile.vy = -v0 * math.sin(math.radians(angle)) + 0.5 * gravity * shoot_projectile.dt
+            shoot_projectile.v0 = v0
+            shoot_projectile.angle = angle
+            shoot_projectile.update()
+            t += shoot_projectile.dt
+        
+        # Check if the projectile is still on the screen
+        if shoot_projectile.is_on_screen():
+            # Add the position to the list
+            positions.append(shoot_projectile.get_position())
+
+        else:
+            # Stop the simulation
+            #running = False
+            projectile = shoot_projectile(10, res_y/2, 0, 0)  # Set initial velocity to zero
+
+            dx = pl_x - shoot_projectile.x
+            dy = pl_y - shoot_projectile.y
+            d = math.sqrt(dx**2 + dy**2)#distance between the starting point and the target point in two-dimensional space.
+            angle = math.degrees(math.atan2(dy, dx))
+                    
+            if(angle==0):
+                angle=45
+                    #intial velocity
+            v0 = math.sqrt((d * gravity) / (math.sin(2 * math.radians(angle))))                    
+            shoot_projectile.vx = v0 * math.cos(math.radians(angle))
+            shoot_projectile.vy = -v0 * math.sin(math.radians(angle)) + 0.5 * gravity * projectile.dt
+            shoot_projectile.v0 = v0
+            shoot_projectile.angle = angle
+        
+        for position in positions:
+            pygame.draw.circle(screen, (255, 255, 255), position, 2)
 
         draw_text (f"Time: {round(elapsed_time)}s", font, TEXT_COL, (res_x / 2) - 110, 20)
         draw_text (f"Lives: {pl_lives}", font, TEXT_COL, 50, 20)
 
-        platform.update()
+        for platform in platforms:
+            platform.update()
         # Draw player in a determined location
         screen.blit(PLImg, player)
-        # Update screen
-        pygame.display.update()
+        # Draw the projectile
+        shoot_projectile.draw(screen)
+        # Update the screen
+        pygame.display.flip()
         
-main()
+        # Wait for next frame
+        clock.tick(60)
+
+    # Done
+    pygame.quit()
+
+# Call the main function
+if __name__ == "__main__":
+    main()

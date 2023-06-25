@@ -150,7 +150,7 @@ def main():
     # Initial for Cannonballs spawn after 30 seconds
     next_spawn_time_cannonballs = 30
     # Initial for shot balls spawn after 10 seconds
-    next_spawn_time_shootballs = 10
+    next_spawn_time_shootballs = 5
     
     clock = pygame.time.Clock()
     # Keeping track of time
@@ -293,13 +293,25 @@ def main():
         
 
         if elapsed_time >= next_spawn_time_shootballs:
-            dx = pl_x - projectile.x
-            dy = (pl_y - water_level) - projectile.y
+            # Get player pos x
+            dx = (pl_x + 100) - projectile.x
+            # Get player pos y
+            if pl_y < water_level - pl_height:
+                dy = pl_y - projectile.y
+                print("Up!")
+            else:
+                dy = pl_y
+
             d = math.sqrt(dx**2 + dy**2)  # Distance between the starting point and the target point in two-dimensional space.
             angle = math.degrees(math.atan2(dy, dx))
+            print(f"dx: {dx}")
+            print(f"dy: {dy}")
+            print(f"d: {d}")
+            print(f"angle: {angle}")
             
             if angle <= 0:
-                angle = 45
+                print("F")
+                angle = 10
 
             # Calculate initial velocity
             denominator = math.sin(2 * math.radians(angle))
@@ -324,7 +336,7 @@ def main():
             pl_lives -= 1
             positions.clear()
             # Schedule next spawn after 30 seconds
-            next_spawn_time_shootballs += 10
+            next_spawn_time_shootballs += 5
 
         # Check if the projectile is still on the screen
         if projectile.is_on_screen():
@@ -338,7 +350,7 @@ def main():
             projectile.update()
             positions.clear()
             # Schedule next spawn after 30 seconds
-            next_spawn_time_shootballs += 10
+            next_spawn_time_shootballs += 5
         
 
         draw_text (f"Time: {round(elapsed_time)}s", font, TEXT_COL, (res_x / 2) - 110, 20)

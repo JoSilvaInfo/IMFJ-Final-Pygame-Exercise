@@ -34,9 +34,9 @@ class ShootBullet:
             #self.lives -= 1
             self.x = 10
             self.y = self.water_level
-            print(self.x)
-            print(self.y)
-            print(self.lives)
+            #print(self.x)
+            #print(self.y)
+            #print(self.lives)
             return self.lives, self.x, self.y
             
 
@@ -46,8 +46,9 @@ class ShootBullet:
     def is_offscreen(self):
             self.x = 10
             self.y = self.water_level
-            print(self.x)
-            print(self.y)
+            #print(self.x)
+            #print(self.y)
+            #print("Offscreen!")
             return self.x, self.y
     
     def draw(self, surface):

@@ -51,13 +51,14 @@ buoyant_force = 5
 gravity = 9.8
 
 ## Platform
-plt_height = 10
-plt_width = 30
+plt_height = 20
+plt_width = 100
 # Platform mass
 plt_mass = 1.5
 plt_buoyance = 0.5
 # List to store Platform instances
-platforms = []  
+platforms = [] 
+platPos = [plt_width + 50, res_x / 3, res_x / 2, res_x -100, res_x - (50 + plt_width)] 
 # Max platfomrs on screen
 max_platforms = random.randint(4, 5)
 
@@ -93,22 +94,21 @@ def draw_text(text, font, text_col, x, y):
 
 
 def random_platform():
-    global plt_width, plt_height, plt_mass, plt_buoyance
+    global plt_buoyance
     # Generate random proportions
-    plt_width = random.randint(50, 150)
-    plt_height = random.randint(10, 30)
-    plt_mass = random.uniform(0.5, 1)
     plt_buoyance = 2 / (plt_width * plt_mass)
-    return plt_width, plt_height, plt_mass, plt_buoyance
+    return plt_buoyance
 
 
 def spawn_platform():
-    global plt_width, plt_height, plt_mass
-    num_platforms = random.randint(3, max_platforms - len(platforms))
+    num_platforms = 5
+    i = 0
     for _ in range(num_platforms):
-        pltp_x = random.randint(plt_width + 50, res_x - (50 + plt_width))
+        pltp_x = platPos[i]
         pltp_y = water_level
-        plt_width, plt_height, plt_mass, plt_buoyance = random_platform()
+        i += 1
+        plt_mass = 1
+        plt_buoyance = random_platform()
         platform = Platform(pltp_x, pltp_y, plt_width, plt_height, water_level, water_density, gravity, plt_mass, plt_buoyance)
         platforms.append(platform)
 
@@ -249,20 +249,21 @@ def main():
         # Apply gravity to the player
         pl_y += gravity
 
-        # Check if player exceeds screen boundaries
+        # Check if player exceeds screen boundaries Top
         if pl_y < 0:
             pl_y = 0
-        elif pl_y > water_level - pl_height:
+
+        # Check if player exceeds screen boundaries Bottom
+        if pl_y > water_level - pl_height:
+            # If in platform
             pl_y = water_level - pl_height
+            # If not
+            #ded
+
 
         for platform in platforms:
-            # Check for collision between player and platform
-            if player.colliderect(platform.get_rect()):
-                # Player is on top of the platform, update its buoyancy attribute
-                platform.buoyant_force = plt_buoyance
-            else:
-                # Player is not on top of the platform, reset its buoyancy attribute
-                platform.buoyant_force = 0
+            # Handle CannonBall collisions
+            platform.handle_collision(player)
         
         if elapsed_time >= next_spawn_time_cannonballs:
             # Spawn CannonBalls if the maximum number is not reached
@@ -299,13 +300,16 @@ def main():
                 dy = pl_y - projectile.y
             else:
                 dy = water_level - projectile.y
-            d = math.sqrt(dx**2 + dy**2)#distance between the starting point and the target point in two-dimensional space.
+            d = math.sqrt(dx**2 + dy**2)
+
+            # Distance between the starting point and the target point in two-dimensional space.
             angle = math.degrees(math.atan2(dy, dx))
             
             if(angle<=0):
                 print("F")
                 angle=45
-            #intial velocity
+
+            # Intial velocity
             v0 = math.sqrt((d * gravity) / (math.sin(2 * math.radians(angle))))                    
             projectile.vx = v0 * math.cos(math.radians(angle))
             projectile.vy = -v0 * math.sin(math.radians(angle)) + 0.5 * gravity * projectile.dt
@@ -351,7 +355,6 @@ def main():
         
         for position in positions:
             pygame.draw.circle(screen, (255, 255, 255), position, 2)
-
         
         # Draw player in a determined location
         screen.blit(PLImg, player)

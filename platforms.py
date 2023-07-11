@@ -40,7 +40,7 @@ class Platform:
             submerged_depth = ((self.y + self.height) - self.water_level)
             
             # Calculate the buoyant force
-            submerged_volume = 0.4*submerged_depth/self.height 
+            submerged_volume = 0.4 * submerged_depth/self.height 
             
             rect_density = self.mass / submerged_volume
 
@@ -50,11 +50,9 @@ class Platform:
                 self.mass = self.ogMass
 
             if rect_density < self.water_density:
-                self.b_force += 0.1* rect_density * submerged_volume * self.gravity
-                #print("up")
+                self.b_force += 0.1 * rect_density * submerged_volume * self.gravity
             else:
-                self.b_force -= 0.1* rect_density * submerged_volume * self.gravity
-                #print("down") 
+                self.b_force -= 0.1 * rect_density * submerged_volume * self.gravity
             
             # Calculate the net force
             net_force = self.mass * self.gravity - self.b_force
@@ -73,10 +71,12 @@ class Platform:
             self.y -= buoyancy_force / self.mass
 
     def handle_collision(self, player):
-        distance = math.sqrt((player.x - self.x) ** 2 + (player.y - self.y) ** 2)
-        if distance <= player.height:
+        distance_x = math.sqrt(((player.x * 2) - (self.x * 2)) ** 2)
+        distance_y = math.sqrt((player.y - self.y) ** 2)
+
+        if distance_y <= player.height and distance_x <= player.width:
             self.onPlatform = True
-            print("Collide")
+            #print("Collide")
         else:
             self.onPlatform = False
 

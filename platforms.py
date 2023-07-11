@@ -71,13 +71,21 @@ class Platform:
             self.y -= buoyancy_force / self.mass
 
     def handle_collision(self, player):
-        distance_x = math.sqrt(((player.x * 2) - (self.x * 2)) ** 2)
-        distance_y = math.sqrt((player.y - self.y) ** 2)
+        player_x = (player.x + (player.width / 2)) 
+        player_y = (player.y + player.height)
+        platArea = self.x + self.width
+        distance_y = (platArea / 2) - player_y
+        #print (distance_y > player.height)
+        #print(player_x)
+        #print (self.x) #It's screwing everything cause of the 5 diff spawns
+        #print (platArea)
+        #print (player_x >= self.x)
+        #print(player_x <= platArea)
 
-        if distance_y <= player.height and distance_x <= player.width:
+        if distance_y <= player.height and player_x >= self.x and player_x <= platArea:
             self.onPlatform = True
             #print("Collide")
-        else:
+        if distance_y > player_y:
             self.onPlatform = False
 
     def draw(self, screen):

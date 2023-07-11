@@ -141,10 +141,10 @@ def main():
     global pl_jump, pl_lives, cannonballs,shoot, remove_list, plt_mass, plt_buoyance, t, shoot
 
     # Movement key hold confirmations
-    move_l, move_r, jumping = False, False, False
+    move_l, move_r, jumping, canJump, plOnPlt = False, False, False, False, False
 
     # Define initial position
-    pl_x, pl_y, pl_j_speed = platPos[0], (water_level - pl_height) - 2, pl_jump 
+    pl_x, pl_y, pl_j_speed = platPos[0], (water_level - pl_height) - 300, pl_jump 
     pl_accel_x = 0
     pl_vel_x = 0
     # Initial for Cannonballs spawn after 30 seconds
@@ -195,7 +195,12 @@ def main():
                 if event.key == pygame.K_RIGHT:
                     move_r = True
                 if event.key == pygame.K_UP:
-                    pl_j_speed = pl_jump
+                    if canJump:
+                        pl_j_speed = pl_jump
+                        plOnPlt = False
+                        jumping = True
+                    else:
+                        jumping = False
                     
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT and move_l:
@@ -239,10 +244,6 @@ def main():
         elif pl_x < 50:
             pl_x = 50
 
-        if jumping:
-            pl_y -= pl_j_speed
-            pl_j_speed -= gravity
-
         # Apply gravity to the player
         pl_y += gravity
 
@@ -250,24 +251,33 @@ def main():
         if pl_y < 0:
             pl_y = 0
 
+        if not plOnPlt:
+            for platform in platforms:
+                # Handle CannonBall collisions
+                platform.handle_collision(player)
 
-        for platform in platforms:
-            # Handle CannonBall collisions
-            platform.handle_collision(player)
+                if platform.onPlatform:
+                    plOnPlt = True
+                    canJump = True
+                    print("onPlt")
+                    if jumping:
+                        pl_y -= pl_j_speed
+                        pl_j_speed -= gravity
 
-            if platform.onPlatform:
-                print("onPlt")
-                pl_y = platform.y - pl_height
-                jumping = True
+                    else:
+                        pl_y = platform.y - pl_height
+        
+                if platform.onPlatform == False:
+                    print("Fall")
+                    plOnPlt = False
+                    canJump = False
+                    jumping = False
 
-            if platform.onPlatform == False:
-                print("Fall")
-                jumping = False
-                if pl_y > water_level + pl_height:
-                    print("Drown")
-                    pl_lives - 1
-                    pl_x = platform.x
-                    pl_y = platform.y - pl_height
+                    if pl_y > water_level + pl_height:
+                        print("Drown")
+                        pl_lives - 1
+                        pl_x = platform.x
+                        pl_y = platform.y - pl_height
         
         if elapsed_time >= next_spawn_time_cannonballs:
             # Spawn CannonBalls if the maximum number is not reached
@@ -364,6 +374,7 @@ def main():
         screen.blit(PLImg, player)
         # Draw the projectile
         projectile.draw(screen)
+
         # Update the screen
         pygame.display.flip()
         

@@ -46,10 +46,8 @@ class ShootBullet:
     def is_offscreen(self):
             self.x = 10
             self.y = self.water_level
-            #print(self.x)
-            #print(self.y)
-            #print("Offscreen!")
             return self.x, self.y
     
-    def draw(self, surface):
-        pygame.draw.circle(surface, (255,160,122), (int(self.x), int(self.y)), self.radius)
+    def draw(self, img, screen):
+        #pygame.draw.circle(screen, (0,0,0), (int(self.x), int(self.y)), self.radius)
+        screen.blit(img, (self.x - self.radius, self.y - self.radius))

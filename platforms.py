@@ -96,5 +96,5 @@ class Platform:
             #self.onPlatform = False
 
 
-    def draw(self, screen):
-        pygame.draw.rect(screen, (255, 0, 0), (self.x, self.y, self.width, self.height))
+    def draw(self, img, screen):
+        screen.blit(img, (self.x, self.y))

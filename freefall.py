@@ -54,5 +54,5 @@ class CannonBall:
         self.offscreen = True
         cannonballs.remove(self)
     
-    def draw(self, screen):
-        pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius)
+    def draw(self, img, screen):
+        screen.blit(img, (self.x, self.y))

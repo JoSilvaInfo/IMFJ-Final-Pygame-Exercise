@@ -20,8 +20,7 @@ res_x, res_y = 1400, 1000
 screen = pygame.display.set_mode((res_x, res_y))
 ## Set the pygame window name
 pygame.display.set_caption("Pirate Escape")
-## Load background image and re-size it 
-BGImg = pygame.transform.scale(pygame.image.load("img/BG1.png"), (res_x, res_y))
+
 
 # Player parameters:
 ## Player lives
@@ -37,7 +36,6 @@ pl_friction = 0.1
 # Max speed for the player
 pl_max_speed = 5
 ## Load player image and re-size it 
-PLImg = pygame.transform.scale(pygame.image.load("img/Player.png"), (pl_width, pl_height))
 
 # Buoyancy parameters:
 ## Initial position of the water level
@@ -87,6 +85,15 @@ positions = []
 font = pygame.font.SysFont("arialblack", 50)
 ## Define colors
 TEXT_COL = (0, 0, 0)
+## Load images and re-size it 
+BGImg = pygame.transform.scale(pygame.image.load("img/BG1.png"), (res_x, res_y))
+SeaImg = pygame.transform.scale(pygame.image.load("img/far_sea.png"), (res_x, res_y /2))
+WaterLvlImg = pygame.transform.scale(pygame.image.load("img/close_sea.png"), (res_x, water_level))
+PltImg = pygame.transform.scale(pygame.image.load("img/log.png"), (plt_width, plt_height + 5))
+cannonBallImg = pygame.transform.scale(pygame.image.load("img/cannon_ball.png"), (ball_radius + 20, ball_radius + 20))
+BombImg = pygame.transform.scale(pygame.image.load("img/bomb.png"), (ball_radius * 5, ball_radius*5))
+CannonImg = pygame.transform.scale(pygame.image.load("img/cannon.png"), (pl_width, pl_height))
+PLImg = pygame.transform.scale(pygame.image.load("img/Player.png"), (pl_width, pl_height))
 
 def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
@@ -174,13 +181,20 @@ def main():
         
         # Player object
         player = pygame.Rect(pl_x, pl_y, pl_width, pl_height)
-        # Clears the screen with the same backgroung image
+    
+        # Clears the screen with the same background image
         screen.blit(BGImg, (0, 0))
+        
+        # Draw sea images
+        screen.blit(SeaImg, (0, res_y/2 - 100))
+        screen.blit(WaterLvlImg, (0, res_y /2 + 350))
+
         # Draw ground
-        pygame.draw.line(screen, (0, 0, 0), (0, water_level), (res_x, water_level), 2)
+        #pygame.draw.line(screen, (0, 0, 0), (0, water_level), (res_x, water_level), 2)
+        
         # Update and draw the platform
         for platform in platforms:
-            platform.draw(screen)
+            platform.draw(PltImg, screen)
         
         # Process events
         for event in pygame.event.get():
@@ -305,7 +319,7 @@ def main():
             ball.handle_cball_collision(player, cannonballs)
 
             # Draw CannonBalls
-            ball.draw(screen)
+            ball.draw(BombImg, screen)
         
 
         if elapsed_time >= next_spawn_time_shootballs:
@@ -353,7 +367,7 @@ def main():
             # Add the position to the list
             positions.append(projectile.get_position())
             # Draw the projectile
-            projectile.draw(screen)
+            projectile.draw(cannonBallImg, screen)
 
         else:
             projectile.is_offscreen()
@@ -374,8 +388,11 @@ def main():
         # Draw player in a determined location
         screen.blit(PLImg, player)
         # Draw the projectile
-        projectile.draw(screen)
-
+        projectile.draw(cannonBallImg, screen)
+    
+        # Draw sea cannons
+        screen.blit(CannonImg, (-30, (water_level+60) - CannonImg.get_height()))
+    
         # Update the screen
         pygame.display.flip()
         

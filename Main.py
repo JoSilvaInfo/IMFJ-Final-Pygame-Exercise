@@ -58,7 +58,7 @@ plt_mass = 1.5
 plt_buoyance = 0.5
 # List to store Platform instances
 platforms = [] 
-platPos = [plt_width + 50, res_x / 3, res_x / 2, res_x -100, res_x - (50 + plt_width)] 
+platPos = [plt_width + 50, res_x / 3, res_x / 2, res_x -400, res_x - (50 + plt_width)] 
 # Max platfomrs on screen
 max_platforms = random.randint(4, 5)
 
@@ -71,9 +71,9 @@ ball_speed = ball_radius * ball_mass
 cannonball_delay = 100 
 # List to store CannonBall instances
 cannonballs = []
-remove_list = []  
+remove_list = []
 # Max cannonballs on screen
-max_cannonballs = random.randint(2, 4)
+max_cannonballs = 5
 
 ## Shot projectile
 # Initialize the time variable and flag variables
@@ -121,17 +121,19 @@ def random_ball():
 
 
 def spawn_cballs():
+    i = 0
     global ball_radius, ball_mass
     # Calculate the number of CannonBalls to spawn
-    num_balls = random.randint(1, max_cannonballs - len(cannonballs))
+    num_balls = max_cannonballs
     for _ in range(num_balls):
-        sp_x = random.randint(ball_radius, res_x - ball_radius)
+        sp_x = platPos[i]
         sp_y = 10
+        i += 1
         color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
         ball_radius, ball_mass = random_ball()
         ball_speed = ball_radius * ball_mass
         # Include the 'lives' argument when creating a CannonBall instance
-        ball = CannonBall(sp_x, sp_y, ball_radius, ball_mass, 0, ball_speed, color, water_level, gravity, pl_height, pl_lives)
+        ball = CannonBall(sp_x, sp_y, ball_radius, ball_mass, 0, ball_speed, color, water_level, gravity, pl_height, pl_lives, res_y)
         cannonballs.append(ball)
 
 
@@ -262,20 +264,20 @@ def main():
                 if platform.onPlatform:
                     plOnPlt = True
                     canJump = True
-                    print("onPlt")
+                   # print("onPlt")
                     if jumping:
                         pl_y -= pl_j_speed
                         pl_j_speed -= gravity
                     else:
                         pl_y = platform.y - pl_height
                 else:
-                    print("Fall")
+                    #print("Fall")
                     plOnPlt = False
                     canJump = False
                     jumping = False
 
                     if pl_y > water_level + pl_height:
-                        print("Drown")
+                        #print("Drown")
                         pl_lives -= 1
                         pl_x = platform.x
                         pl_y = platform.y - pl_height
@@ -284,7 +286,7 @@ def main():
                     if len(cannonballs) < max_cannonballs:
                         spawn_cballs()
                     # Schedule next spawn after 30 seconds
-                    next_spawn_time_cannonballs += 30
+                    next_spawn_time_cannonballs += 15
             
         time_step = 0.1
 
@@ -300,11 +302,10 @@ def main():
                 cannonballs[:] = [ball for ball in cannonballs if ball not in remove_list]
 
             # Handle CannonBall collisions
-            ball.handle_cball_collision(player)
+            ball.handle_cball_collision(player, cannonballs)
 
             # Draw CannonBalls
-            for ball in cannonballs:
-                ball.draw(screen)
+            ball.draw(screen)
         
 
         if elapsed_time >= next_spawn_time_shootballs:
@@ -320,7 +321,7 @@ def main():
             angle = math.degrees(math.atan2(dy, dx))
             
             if(angle<=0):
-                print("F")
+                #print("F")
                 angle=45
 
             # Intial velocity
@@ -332,10 +333,10 @@ def main():
             t += projectile.dt
             # Schedule next spawn after 30 seconds
             next_spawn_time_shootballs += 5
-            print(f"dx: {dx}")
-            print(f"dy: {dy}")
-            print(f"d: {d}")
-            print(f"angle: {angle}")
+            #print(f"dx: {dx}")
+            #print(f"dy: {dy}")
+            #print(f"d: {d}")
+            #print(f"angle: {angle}")
 
         if shoot:
             projectile.update()

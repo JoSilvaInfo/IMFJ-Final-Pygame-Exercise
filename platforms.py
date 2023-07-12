@@ -87,7 +87,7 @@ class Platform:
         #platArea = self.x + self.width
         #distance_y = (platArea / 2) - player_y
         
-        print(self.x)
+        #print(self.x)
 
         #if distance_y <= player.height and player_x >= self.x and player_x <= platArea:
             #self.onPlatform = True

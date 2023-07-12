@@ -3,7 +3,7 @@ from pygame.math import Vector2
 import math
 
 class CannonBall:
-    def __init__(self, x, y, radius, mass, angle_degrees, speed, color, water_level, gravity, height, lives):
+    def __init__(self, x, y, radius, mass, angle_degrees, speed, color, water_level, gravity, height, lives, res_y):
         self.x = x
         self.y = y
         self.radius = radius
@@ -17,6 +17,7 @@ class CannonBall:
         self.gravity = gravity
         self.height = height
         self.lives = lives
+        self.screen_y = res_y
         self.collided_with_player = False
         self.offscreen = False
 
@@ -32,7 +33,7 @@ class CannonBall:
             self.is_offscreen(cannonballs)
 
     def falling(self):
-        if self.y + self.height < self.water_level:  # Rectangle is in the free-fall phase
+        if self.y + self.height < self.screen_y:  # Rectangle is in the free-fall phase
                 # Calculate the net force
                 net_force = self.mass * self.gravity
                 
@@ -41,11 +42,12 @@ class CannonBall:
                 self.y += acceleration
     
     
-    def handle_cball_collision(self, player):
+    def handle_cball_collision(self, player, cannonballs):
         distance = math.sqrt((player.x - self.x) ** 2 + (player.y - self.y) ** 2)
         if distance <= self.radius + player.height:
             self.lives -= 1
             self.collided_with_player = True
+            cannonballs.remove(self)
 
     def is_offscreen(self, cannonballs):
         print("Destroy")

@@ -253,7 +253,10 @@ def main():
 
         if not plOnPlt:
             for platform in platforms:
-                # Handle CannonBall collisions
+                # Update platform
+                platform.update()
+
+                # Handle collision
                 platform.handle_collision(player)
 
                 if platform.onPlatform:
@@ -263,11 +266,9 @@ def main():
                     if jumping:
                         pl_y -= pl_j_speed
                         pl_j_speed -= gravity
-
                     else:
                         pl_y = platform.y - pl_height
-        
-                if platform.onPlatform == False:
+                else:
                     print("Fall")
                     plOnPlt = False
                     canJump = False
@@ -275,22 +276,21 @@ def main():
 
                     if pl_y > water_level + pl_height:
                         print("Drown")
-                        pl_lives - 1
+                        pl_lives -= 1
                         pl_x = platform.x
                         pl_y = platform.y - pl_height
-        
-        if elapsed_time >= next_spawn_time_cannonballs:
-            # Spawn CannonBalls if the maximum number is not reached
-            if len(cannonballs) < max_cannonballs:
-                spawn_cballs()
-            # Schedule next spawn after 30 seconds
-            next_spawn_time_cannonballs += 30
+                if elapsed_time >= next_spawn_time_cannonballs:
+                    # Spawn CannonBalls if the maximum number is not reached
+                    if len(cannonballs) < max_cannonballs:
+                        spawn_cballs()
+                    # Schedule next spawn after 30 seconds
+                    next_spawn_time_cannonballs += 30
             
         time_step = 0.1
 
         # Update CannonBalls
         for ball in cannonballs:
-            ball.update(time_step)
+            ball.update(time_step, cannonballs)
 
             # Delay between cannonball updates
             pygame.time.delay(cannonball_delay)

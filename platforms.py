@@ -73,28 +73,24 @@ class Platform:
     def handle_collision(self, player):
         player_x = player.x + player.width / 2
         player_y = player.y + player.height
-
-        #platform_left = self.x
-        #platform_right = self.x + self.width
-
-        #if self.y <= player_y <= self.y + (self.height + 50) and platform_left <= player_x <= platform_right:
-            #self.onPlatform = True
-        #else:
-            #self.onPlatform = False
-
-        player_x = (player.x + (player.width / 2)) 
-        player_y = (player.y + player.height)
         platArea = self.x + self.width
         distance_y = (platArea / 2) - player_y
+
+        platform_left = self.x
+        platform_right = self.x + self.width
+
+        if distance_y <= player.height and platform_left <= player_x <= platform_right:
+            self.onPlatform = True
+        else:
+            self.onPlatform = False
         
         #print(self.x)
 
-        if distance_y <= player.height and player_x >= self.x and player_x <= platArea:
-            self.onPlatform = True
-            print("Collide")
-        else:
-            self.onPlatform = False
-            print("Not Colliding")
+        #if distance_y <= player.height and player_x >= self.x and player_x <= platArea:
+            #self.onPlatform = True
+            #print("Collide")
+        #if distance_y > player_y:
+            #self.onPlatform = False
 
 
     def draw(self, img, screen):

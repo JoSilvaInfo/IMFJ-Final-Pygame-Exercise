@@ -11,6 +11,7 @@ def show_menu(screen, res_x, res_y, score):
     game_paused = True
     menu_state = "main"
     global game_volume
+
     # Defining screen/window:
     # Load background image and re-size it
     BGImg = pygame.transform.scale(pygame.image.load("img/BG1.png"), (res_x, res_y))
@@ -20,7 +21,6 @@ def show_menu(screen, res_x, res_y, score):
 
     # Define fonts
     font = pygame.font.SysFont("arialblack", 50)
-    # Define the font for the score display
     score_font = pygame.font.SysFont("arialblack", 30)
     
     # Load background sound
@@ -66,6 +66,7 @@ def show_menu(screen, res_x, res_y, score):
     while run:
         # Clears the screen with the same background image
         screen.blit(BGImg, (0, 0))
+        
         # Check if the game is paused
         if game_paused:
             # Check menu state
@@ -100,7 +101,6 @@ def show_menu(screen, res_x, res_y, score):
             # Check if the controls menu is open
             if menu_state == "controls":
                 # Draw controls screen buttons only
-                ## Show the "How to play" controls
                 draw_text("CONTROLS:", font, TEXT_COL, (res_x / 2) - 110, 200)
                 draw_text("Use the < and > arrow keys to Move.", font, TEXT_COL, 200, 300)
                 draw_text("Use the ^ arrow key to Jump.", font, TEXT_COL, 200, 400)

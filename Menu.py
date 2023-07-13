@@ -11,7 +11,6 @@ def show_menu(screen, res_x, res_y, score):
     game_paused = True
     menu_state = "main"
     global game_volume
-    highScore = score
     # Defining screen/window:
     # Load background image and re-size it
     BGImg = pygame.transform.scale(pygame.image.load("img/BG1.png"), (res_x, res_y))
@@ -58,7 +57,8 @@ def show_menu(screen, res_x, res_y, score):
 
     # Function to draw the score on the screen
     def draw_score(highScore, font, text_col, x, y):
-        score_text = font.render("High Score: " + str(highScore), True, text_col)
+        highScore = score
+        score_text = font.render(f"High Score: {round(highScore)}s", True, text_col)
         screen.blit(score_text, (x, y))
 
     run = True

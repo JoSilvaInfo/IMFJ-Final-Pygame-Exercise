@@ -30,7 +30,7 @@ score = 0
 
 # Player parameters:
 ## Player lives
-pl_lives = 10
+pl_lives = 1
 ## Define the size of the player
 pl_width, pl_height = 100, 120
 ## Define the speed and jump height of the player
@@ -128,7 +128,7 @@ def spawn_platform():
     i = 0
     for _ in range(num_platforms):
         pltp_x = platPos[1]
-        pltp_y = water_level
+        pltp_y = water_level - 200
         i += 1
         plt_mass = 1
         plt_buoyance = random_platform()
@@ -141,7 +141,7 @@ def spawn_platform_2():
     i = 0
     for _ in range(num_platforms):
         pltp_x = platPos[0]
-        pltp_y = water_level
+        pltp_y = water_level - 200
         i += 1
         plt_mass = 1
         plt_buoyance = random_platform()
@@ -154,7 +154,7 @@ def spawn_platform_3():
     i = 0
     for _ in range(num_platforms):
         pltp_x = platPos[2]
-        pltp_y = water_level
+        pltp_y = water_level - 500
         i += 1
         plt_mass = 1
         plt_buoyance = random_platform()
@@ -187,7 +187,7 @@ def spawn_cballs():
 
 # Main game loop
 def main():
-    global pl_jumpHeight, pl_lives, cannonballs,shoot, remove_list, plt_mass, plt_buoyance, t, shoot
+    global pl_jumpHeight, pl_lives, cannonballs,shoot, remove_list, plt_mass, plt_buoyance, t, shoot, score
 
     # Movement key hold confirmations
     move_l, move_r, jumping, canJump, plOnPlt = False, False, False, False, False
@@ -236,10 +236,11 @@ def main():
         screen.blit(WaterLvlImg, (0, res_y /2 + 350))
 
 
-       #if pl_lives <= 0:
-            #menu.show_menu(screen, res_x, res_y, score)
-            #score == elapsed_time
-            #pl_lives = 5
+        if pl_lives <= 0:
+            score += elapsed_time
+            pl_lives = 5
+            menu.show_menu(screen, res_x, res_y, score)
+            
         
         # Update and draw the platform
         for platform in platforms:
@@ -270,7 +271,6 @@ def main():
                 if event.key == pygame.K_UP:
                     if canJump:
                         pl_j_speed = pl_jumpHeight
-                        plOnPlt = False
                         jumping = True
                     
             elif event.type == pygame.KEYUP:
@@ -346,7 +346,6 @@ def main():
         for platform in platforms:
             print (jumping)
             if platform.onPlatform:
-                
                 canJump = True
                 if not jumping:
                     pl_y = platform.y - pl_height

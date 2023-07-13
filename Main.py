@@ -2,6 +2,8 @@ import pygame
 import math
 import random
 import time
+import menu
+import pygame.mixer
 from freefall import CannonBall
 from platforms import Platform
 from shoot import ShootBullet
@@ -9,9 +11,12 @@ from shoot import ShootBullet
 
 # Initialize Pygame
 pygame.init()
+pygame.mixer.init()
 pygame.font.init()
 
+# Menu variables
 StartGame = True
+game_paused = False
 
 # Defining screen/window:
 ## Define the size/resolution of our window
@@ -24,7 +29,7 @@ pygame.display.set_caption("Pirate Escape")
 
 # Player parameters:
 ## Player lives
-pl_lives = 3
+pl_lives = 5
 ## Define the size of the player
 pl_width, pl_height = 100, 120
 ## Define the speed and jump height of the player
@@ -56,7 +61,7 @@ plt_mass = 1.5
 plt_buoyance = 0.5
 # List to store Platform instances
 platforms = [] 
-platPos = [plt_width + 50, res_x / 3, res_x / 2, res_x -400, res_x - (50 + plt_width)] 
+platPos = [plt_width + 150, res_x / 3, res_x / 2, res_x -400, res_x - (50 + plt_width)] 
 # Max platfomrs on screen
 max_platforms = random.randint(4, 5)
 
@@ -94,6 +99,16 @@ cannonBallImg = pygame.transform.scale(pygame.image.load("img/cannon_ball.png"),
 BombImg = pygame.transform.scale(pygame.image.load("img/bomb.png"), (ball_radius * 5, ball_radius*5))
 CannonImg = pygame.transform.scale(pygame.image.load("img/cannon.png"), (pl_width, pl_height))
 PLImg = pygame.transform.scale(pygame.image.load("img/Player.png"), (pl_width, pl_height))
+##Load sounds
+explosion_sound = pygame.mixer.Sound("sounds/explosion.wav")
+cannon_sound = pygame.mixer.Sound("sounds/cannon.ogg")
+jump_sound = pygame.mixer.Sound("sounds/jump.wav")
+##Volume
+#explosion_sound.set_volume(menu.game_volume)
+explosion_sound.set_volume(0.5)
+cannon_sound.set_volume(0.5)
+jump_sound.set_volume(0.5)
+pygame.mixer.music.set_volume(0.5)
 
 def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
@@ -153,7 +168,7 @@ def main():
     move_l, move_r, jumping, canJump, plOnPlt = False, False, False, False, False
 
     # Define initial position
-    pl_x, pl_y, pl_j_speed = platPos[0], (water_level - pl_height) - 300, pl_jump 
+    pl_x, pl_y, pl_j_speed = platPos[2], (water_level - pl_height) - 300, pl_jump 
     pl_accel_x = 0
     pl_vel_x = 0
     # Initial for Cannonballs spawn after 30 seconds
@@ -189,6 +204,11 @@ def main():
         screen.blit(SeaImg, (0, res_y/2 - 100))
         screen.blit(WaterLvlImg, (0, res_y /2 + 350))
 
+        # Load background sound
+        pygame.mixer.music.load("sounds/background.wav")
+        # -1 indicates the music should loop indefinitely
+        pygame.mixer.music.play(-1)  
+
         # Draw ground
         #pygame.draw.line(screen, (0, 0, 0), (0, water_level), (res_x, water_level), 2)
         
@@ -206,6 +226,10 @@ def main():
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return
+                if event.key == pygame.K_p:
+                    menu.game_paused = True
+                    # Show the menu and check the return value
+                    menu.show_menu(screen, res_x, res_y)
                 if event.key == pygame.K_LEFT:
                     move_l = True
                 if event.key == pygame.K_RIGHT:
@@ -260,47 +284,49 @@ def main():
         elif pl_x < 50:
             pl_x = 50
 
-        # Apply gravity to the player
-        pl_y += gravity
-
         # Check if player exceeds screen boundaries Top
         if pl_y < 0:
             pl_y = 0
+        # Check if player exceeds screen boundaries Bottom
+        if pl_y > water_level + pl_height:
+            #print("Drown")
+            pl_lives -= 1
+            pl_x = platPos[2]
+            pl_y = platform.y - pl_height - 50
+
+        if jumping:
+            jump_sound.play()
+            pl_y -= pl_j_speed * pl_jump
+            pl_j_speed -= gravity
+        else:
+            pl_y = platform.y - pl_height
+
+        # Apply gravity to the player
+        pl_y += gravity
+
+        canJump = False
+        jumping = False
 
         if not plOnPlt:
             for platform in platforms:
-                # Update platform
-                platform.update()
-
-                # Handle collision
-                platform.handle_collision(player)
-
                 if platform.onPlatform:
                     plOnPlt = True
                     canJump = True
-                   # print("onPlt")
-                    if jumping:
-                        pl_y -= pl_j_speed
-                        pl_j_speed -= gravity
-                    else:
-                        pl_y = platform.y - pl_height
-                else:
+                    print("onPlt")
+                #else:
                     #print("Fall")
-                    plOnPlt = False
-                    canJump = False
-                    jumping = False
-
-                    if pl_y > water_level + pl_height:
-                        #print("Drown")
-                        pl_lives -= 1
-                        pl_x = platform.x
-                        pl_y = platform.y - pl_height
-                if elapsed_time >= next_spawn_time_cannonballs:
-                    # Spawn CannonBalls if the maximum number is not reached
-                    if len(cannonballs) < max_cannonballs:
-                        spawn_cballs()
-                    # Schedule next spawn after 30 seconds
-                    next_spawn_time_cannonballs += 15
+                
+            # Handle collision
+            platform.handle_collision(player)
+            # Update platform
+            platform.update()
+            
+        if elapsed_time >= next_spawn_time_cannonballs:
+            # Spawn CannonBalls if the maximum number is not reached
+            if len(cannonballs) < max_cannonballs:
+                spawn_cballs()
+            # Schedule next spawn after 30 seconds
+            next_spawn_time_cannonballs += 15
             
         time_step = 0.1
 
@@ -313,17 +339,23 @@ def main():
 
             # Remove CannonBalls that are offscreen or collided with the player
             if ball.offscreen or ball.collided_with_player:
+                #Hit sound
+                #explosion_sound.play()
                 cannonballs[:] = [ball for ball in cannonballs if ball not in remove_list]
 
             # Handle CannonBall collisions
             ball.handle_cball_collision(player, cannonballs)
-
+            
+            #Shoot sound
+            cannon_sound.play()
             # Draw CannonBalls
             ball.draw(BombImg, screen)
         
 
         if elapsed_time >= next_spawn_time_shootballs:
             shoot = True
+            #Shoot sound
+            #cannon_sound.play()
             dx = (pl_x + 100) - projectile.x
             if(pl_y < water_level - pl_height):
                 dy = pl_y - projectile.y
@@ -358,8 +390,10 @@ def main():
         # Check if the projectile hits the character
         if math.sqrt((pl_x - projectile.x)**2 + (pl_y - projectile.y)**2) <= pl_width + projectile.radius:
             projectile.handle_collision(player)
-            pl_lives -= 1
             positions.clear()
+            #Hit sound
+            explosion_sound.play()
+            pl_lives -= 1
             shoot = False
 
         # Check if the projectile is still on the screen
@@ -404,4 +438,11 @@ def main():
 
 # Call the main function
 if __name__ == "__main__":
-    main()
+    # Show the menu and check the return value
+    menu_state = menu.show_menu(screen, res_x, res_y)
+
+    # If the menu returns "Play", start the game
+    if menu_state == "Play":
+        main()
+    else:
+        pygame.quit()
